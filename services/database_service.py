@@ -46,3 +46,40 @@ def get_shift_areas():
     conn.close()
     
     return shift_areas
+
+def get_doctor_seniority():
+
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+     # Doktor kodlarını ve kıdem seviyelerini al
+    cur.execute("""
+        SELECT d.id, s.id
+        FROM doctors d
+        JOIN seniority s ON d.seniority_id = s.id
+    """)
+    result = cur.fetchall()
+
+    # Sonuçları sözlük formatında döndür
+    doctor_seniority = {row[0]: row[1] for row in result}
+
+    cur.close()
+    conn.close()
+
+    return doctor_seniority
+
+def get_doctor_mapping():
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    # Doktor kodlarını ve kimliklerini al
+    cur.execute("SELECT id, name FROM doctors")
+    result = cur.fetchall()
+
+    # Sonuçları sözlük formatında döndür
+    doctor_mapping = {row[1][0].upper(): row[0] for row in result}
+
+    cur.close()
+    conn.close()
+
+    return doctor_mapping

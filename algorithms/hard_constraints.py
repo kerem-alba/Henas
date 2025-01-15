@@ -61,6 +61,6 @@ def check_coverage_in_shift(schedule, doctors):
             missing_areas = required_areas - covered_areas
             if missing_areas:
                 penalty += hard_penalty
-                print(f"Penalty applied: Missing areas in Shift {shift_index + 1} on Day {day_index + 1}: {', '.join(missing_areas)}")
+                #print(f"Penalty applied: Missing areas in Shift {shift_index + 1} on Day {day_index + 1}: {', '.join(missing_areas)}")
 
     return penalty
