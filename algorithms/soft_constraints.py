@@ -1,5 +1,5 @@
-from config.algorithm_config import penalty_unequal_day_night_shifts, penalty_two_night_shifts, penalty_weekend_free, penalty_hierarchy_mismatch
-from services.database_service import get_doctor_seniority, get_doctor_mapping
+from config.algorithm_config import penalty_unequal_day_night_shifts, penalty_two_night_shifts, penalty_weekend_free, penalty_hierarchy_mismatch, min_doctors_per_area
+from services.database_service import get_doctor_seniority, get_shift_areas
 
 def check_unequal_day_night_shifts(schedule):
 
@@ -84,35 +84,50 @@ def check_weekend_free(schedule, doctors):
 def check_hierarchy_mismatch(schedule, doctors, doctor_mapping):
     penalty = 0
 
-    # Doktorların kıdem bilgilerini veritabanından çek
-    seniority = get_doctor_seniority()
-    print("Seniority Data:", seniority)
-    print("Doctor Mapping:", doctor_mapping)
+    # Doktorların kıdem bilgilerini ve alanlarını al
+    shift_area_mapping = get_shift_areas()
 
-    # Doktor kodlarına göre kıdem seviyelerini oluştur
-    doctor_seniorities = {d.code: seniority.get(d.name, float('inf')) for d in doctors}
-    print("Doctor Seniorities by Code:", doctor_seniorities)
-
-    # Programdaki nöbetleri kontrol et
     for day_index, day in enumerate(schedule):
         for shift_index, shift in enumerate(day):
             print(f"\nDay {day_index + 1}, Shift {shift_index + 1}: {shift}")
 
-            # Her nöbetteki doktorların hiyerarşik seviyelerini al
-            shift_seniorities = [doctor_seniorities.get(doctor, float('inf')) for doctor in shift]
-            print("Shift Seniorities:", shift_seniorities)
+            # Doktorların max_area_for_level değerlerini saymak için bir sayaç
+            area_counts = {1: 0, 2: 0, 3: 0, 4: 0}
 
-            # En düşük hiyerarşik seviyeye sahip doktorun seviyesi
-            min_seniority = min(shift_seniorities)
-            print("Min Seniority:", min_seniority)
+            for doctor_code in shift:
+                doctor_name = doctor_mapping.get(doctor_code)
+                doctor_data = next((d for d in doctors if d.name == doctor_name), None)
+                if doctor_data:
+                    # Doktorun alan isimlerini ID'lere çevir
+                    doctor_area_ids = [shift_area_mapping[area] for area in doctor_data.shift_areas if area in shift_area_mapping]
 
-            # Daha yüksek seviyeli doktor atanmış mı?
-            for doctor, level in zip(shift, shift_seniorities):
-                if level > min_seniority:
-                    penalty += penalty_hierarchy_mismatch
-                    print(f"Penalty applied: Doctor {doctor} (Level {level}) assigned to Shift {shift_index + 1} on Day {day_index + 1} despite higher-level doctor presence.")
+                    # En yüksek uygun alan (id bazlı)
+                    max_area_for_level = min(doctor_area_ids, default=None)
+
+                    if max_area_for_level:
+                        area_counts[max_area_for_level] += 1
+
+            print(f"Max Area Counts for Shift {shift_index + 1} on Day {day_index + 1}: {area_counts}")
+
+            # Eksiklikleri ve kaydırmaları hesapla
+            deficit_counts = {area: max(0, min_doctors_per_area[area] - area_counts[area]) for area in area_counts}
+            print(f"Deficit Counts for Shift {shift_index + 1} on Day {day_index + 1}: {deficit_counts}")
+
+            # Alanlardaki kaydırmaları hesapla
+            for area in sorted(min_doctors_per_area.keys(), reverse=True):  # En düşük alanlardan başlayarak
+                while deficit_counts[area] > 0:  # Eksik doktorlar için kaydırma yapılacak
+                    higher_area = area - 1
+                    if higher_area >= 1 and area_counts[higher_area] > min_doctors_per_area[higher_area]:
+                        # Kaydırma işlemi
+                        area_counts[higher_area] -= 1
+                        area_counts[area] += 1
+                        deficit_counts[area] -= 1
+                        penalty += penalty_hierarchy_mismatch
+                        print(f"Penalty applied: Doctor moved from Area {higher_area} to Area {area}.")
+                    else:
+                        # Kaydırma mümkün değilse döngüyü kır
+                        print(f"No more doctors available to move from Area {higher_area} to Area {area}. Breaking loop.")
+                        break
 
     print("Total Penalty:", penalty)
     return penalty
-
-

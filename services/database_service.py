@@ -39,8 +39,8 @@ def get_shift_areas():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
     
-    cur.execute("SELECT area_name FROM shift_areas")
-    shift_areas = [row[0] for row in cur.fetchall()]
+    cur.execute("SELECT id, area_name FROM shift_areas")
+    shift_areas = {row[1]: row[0] for row in cur.fetchall()}
     
     cur.close()
     conn.close()
@@ -48,25 +48,32 @@ def get_shift_areas():
     return shift_areas
 
 def get_doctor_seniority():
-
+    """
+    Veritabanından doktor kıdem bilgilerini ve kıdeme uygun nöbet alanlarını alır.
+    :return: {'A': {'level': 1, 'areas': [1, 2]}, ...} formatında sözlük döndürür.
+    """
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
-     # Doktor kodlarını ve kıdem seviyelerini al
+    # Doktor kıdem bilgilerini ve nöbet alanlarını al
     cur.execute("""
-        SELECT d.id, s.id
+        SELECT d.name, s.id, s.shift_area_ids
         FROM doctors d
         JOIN seniority s ON d.seniority_id = s.id
     """)
     result = cur.fetchall()
 
-    # Sonuçları sözlük formatında döndür
-    doctor_seniority = {row[0]: row[1] for row in result}
-
     cur.close()
     conn.close()
 
+    # Sonuçları düzenle
+    doctor_seniority = {}
+    for code, level, areas in result:
+        doctor_seniority[code] = {"level": level, "areas": areas}
+
     return doctor_seniority
+
+
 
 def get_doctor_mapping():
     conn = psycopg2.connect(**DB_CONFIG)

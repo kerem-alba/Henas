@@ -1,4 +1,4 @@
-from config.algorithm_config import hard_penalty
+from config.algorithm_config import hard_penalty, min_doctors_per_area
 from services.database_service import get_shift_areas
 
 # Hard Constraint 1: Aynı shift içinde aynı doktor birden fazla kez atanmış mı?
@@ -42,25 +42,28 @@ def check_three_consecutive_night_shifts(schedule):
                 #print(f"Penalty applied: Doctor {doctor_code} assigned to 3 consecutive night shifts starting from Day {day_index + 1}")
     return penalty
 
-# Hard Constraint 4: Her nöbet alanında nöbet tutabilecek en az 1 doktor var mı?
+# Hard Constraint 4: Her nöbet alanında nöbet tutabilecek min doktor var mı?
 def check_coverage_in_shift(schedule, doctors):
     penalty = 0
-    required_areas = set(get_shift_areas())  # Veritabanından tüm nöbet alanlarını al
+    shift_area_mapping = get_shift_areas()  # İsim -> ID eşlemesi
+    required_areas = set(min_doctors_per_area.keys())  # Minimum gereksinim olan alanlar
 
     for day_index, day in enumerate(schedule):
         for shift_index, shift in enumerate(day):
-            covered_areas = set()
-
-            # Shift'teki doktorların nöbet alanlarını ekle
+            area_counts = {area: 0 for area in required_areas}
             for doctor_code in shift:
                 doctor = next((d for d in doctors if d.code == doctor_code), None)
                 if doctor:
-                    covered_areas.update(doctor.shift_areas)
+                    for area_name in doctor.shift_areas:
+                        area_id = shift_area_mapping.get(area_name)  # İsmi ID'ye çevir
+                        if area_id in area_counts:
+                            area_counts[area_id] += 1
 
-            # Eksik olan nöbet alanlarını bul
-            missing_areas = required_areas - covered_areas
-            if missing_areas:
-                penalty += hard_penalty
-                #print(f"Penalty applied: Missing areas in Shift {shift_index + 1} on Day {day_index + 1}: {', '.join(missing_areas)}")
+            #print(f"Day {day_index + 1}, Shift {shift_index + 1},Doctors: {shift}, Area Counts: {area_counts}")
+
+            for area, min_count in min_doctors_per_area.items():
+                if area_counts[area] < min_count:
+                    penalty += hard_penalty * (min_count - area_counts[area])
+                    #print(f"Penalty applied: Area {area} in Shift {shift_index + 1} on Day {day_index + 1} "f"does not meet minimum requirement ({min_count} required, {area_counts[area]} present).")
 
     return penalty

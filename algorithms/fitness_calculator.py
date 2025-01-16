@@ -14,13 +14,14 @@ def calculate_fitness(schedule, doctors, doctor_mapping):
     fitness_score -= check_duplicate_shifts(schedule)
     fitness_score -= check_consecutive_shifts(schedule)
     fitness_score -= check_three_consecutive_night_shifts(schedule)
+    print("fs1",fitness_score)
     fitness_score -= check_coverage_in_shift(schedule, doctors)
+    print("fs2",fitness_score)
+
 
     fitness_score -= check_unequal_day_night_shifts(schedule)
     fitness_score -= check_two_night_shifts(schedule)
     fitness_score -= check_weekend_free(schedule, doctors)
-    print("fs1",fitness_score)
-    fitness_score -= check_hierarchy_mismatch(schedule, doctors, doctor_mapping)
-    print("fs2",fitness_score)
+    fitness_score -= check_hierarchy_mismatch(schedule,doctors, doctor_mapping)
 
     return fitness_score
