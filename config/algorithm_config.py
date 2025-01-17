@@ -1,7 +1,12 @@
 # Algoritma Parametreleri
-population_size = 3
+population_size = 10
 days = 30
 shifts_per_day = 2
+
+e = 4 # Elitist count
+etr = 0.5 # Elit transfer rate
+tr = 0.8 # Tournament random preelimination rate
+ps = "random" # Parent pairing method
 
 initial_fitness_score = 1000  # Başlangıç puanı
 

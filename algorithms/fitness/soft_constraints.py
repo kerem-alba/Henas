@@ -89,7 +89,7 @@ def check_hierarchy_mismatch(schedule, doctors, doctor_mapping):
 
     for day_index, day in enumerate(schedule):
         for shift_index, shift in enumerate(day):
-            print(f"\nDay {day_index + 1}, Shift {shift_index + 1}: {shift}")
+            #print(f"\nDay {day_index + 1}, Shift {shift_index + 1}: {shift}")
 
             # Doktorların max_area_for_level değerlerini saymak için bir sayaç
             area_counts = {1: 0, 2: 0, 3: 0, 4: 0}
@@ -107,11 +107,11 @@ def check_hierarchy_mismatch(schedule, doctors, doctor_mapping):
                     if max_area_for_level:
                         area_counts[max_area_for_level] += 1
 
-            print(f"Max Area Counts for Shift {shift_index + 1} on Day {day_index + 1}: {area_counts}")
+            #print(f"Max Area Counts for Shift {shift_index + 1} on Day {day_index + 1}: {area_counts}")
 
             # Eksiklikleri ve kaydırmaları hesapla
             deficit_counts = {area: max(0, min_doctors_per_area[area] - area_counts[area]) for area in area_counts}
-            print(f"Deficit Counts for Shift {shift_index + 1} on Day {day_index + 1}: {deficit_counts}")
+            #print(f"Deficit Counts for Shift {shift_index + 1} on Day {day_index + 1}: {deficit_counts}")
 
             # Alanlardaki kaydırmaları hesapla
             for area in sorted(min_doctors_per_area.keys(), reverse=True):  # En düşük alanlardan başlayarak
@@ -123,11 +123,11 @@ def check_hierarchy_mismatch(schedule, doctors, doctor_mapping):
                         area_counts[area] += 1
                         deficit_counts[area] -= 1
                         penalty += penalty_hierarchy_mismatch
-                        print(f"Penalty applied: Doctor moved from Area {higher_area} to Area {area}.")
+                        #print(f"Penalty applied: Doctor moved from Area {higher_area} to Area {area}.")
                     else:
                         # Kaydırma mümkün değilse döngüyü kır
-                        print(f"No more doctors available to move from Area {higher_area} to Area {area}. Breaking loop.")
+                        #print(f"No more doctors available to move from Area {higher_area} to Area {area}. Breaking loop.")
                         break
 
-    print("Total Penalty:", penalty)
+    #print("Total Penalty:", penalty)
     return penalty

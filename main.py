@@ -7,17 +7,13 @@ from config.shift_updates import shift_updates
 
 # Veritabanından doktor verilerini çek
 doctor_data = get_doctors()
-print(doctor_data)
 doctors = [Doctor(None, name, seniority, shift_count, shift_areas) for name, seniority, shift_count, shift_areas in doctor_data]
-
 # Doktor kodlarını ata
 doctors, doctor_mapping = assign_codes(doctors)
-print("Doctor Mapping::", doctor_mapping)
-
 
 # Nöbet sayısı güncellemeleri (isimlere göre)
 doctors = update_shift_counts_by_name(doctors, shift_updates)
-print(doctors)
+print("Doctors:",doctors)
 
 # Genetik algoritmayı çalıştır
 run_genetic_algorithm(doctors, doctor_mapping, days=days, shifts_per_day=shifts_per_day, population_size=population_size)
