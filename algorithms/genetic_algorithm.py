@@ -1,11 +1,11 @@
 from algorithms.initial_population import create_initial_population
 from algorithms.fitness.fitness_methods import calculate_fitness
-from algorithms.selection.parent_selection_methods import handle_elites, random_preselect_tournament_pool, create_parent_pool_from_pairs
+from algorithms.selection.parent_selection_methods import handle_elites, distribute_to_pools, append_parents_from_tournament_pool
 from algorithms.selection.crossover_methods import pair_parents, generate_next_generation_with_pmx
 from algorithms.mutation.mutation_methods import apply_mutation
 
 def run_genetic_algorithm(
-    doctors, doctor_mapping, days, shifts_per_day, population_size, max_generations=500
+    doctors, doctor_mapping, days, shifts_per_day, population_size, max_generations=100
 ):
     # Başlangıç popülasyonunu oluştur
     population = create_initial_population(
@@ -32,16 +32,16 @@ def run_genetic_algorithm(
         population_with_fitness_score.sort(key=lambda x: x[1], reverse=True)
 
         # Elit bireyleri seç ve turnuva havuzunu oluştur
-        next_generation_pool, tournament_pool = handle_elites(population_with_fitness_score)
+        next_generation_pool, pre_tournament_pool, parent_pool = handle_elites(population_with_fitness_score)
 
-        # Turnuva havuzunda eleme yap
-        filtered_tournament_pool = random_preselect_tournament_pool(tournament_pool)
+        # Turnuva havuzunu oluştur ve parent havuzuna ekle
+        tournament_pool, parent_pool = distribute_to_pools(pre_tournament_pool, parent_pool)
 
-        # Eleme sonrası bireyler arasında eşleşme yaparak parent havuzunu oluştur
-        parent_pool = create_parent_pool_from_pairs(filtered_tournament_pool)
+        # Turnuva havuzundan parent havuzuna geçen bireyleri ekle
+        parent_pool = append_parents_from_tournament_pool(tournament_pool, parent_pool)
 
         # Çaprazlama
-        pairs = pair_parents(parent_pool)
+        pairs = pair_parents(parent_pool, next_generation_pool)
         next_generation_pool = generate_next_generation_with_pmx(pairs, next_generation_pool)
 
         # Mutasyon uygula
@@ -55,9 +55,11 @@ def run_genetic_algorithm(
         # Toplam fitness hesapla
         total_fitness = sum(fitness_score for _, fitness_score in next_generation_with_fitness)
 
+        sorted_next_generation = sorted(next_generation_with_fitness, key=lambda x: x[1], reverse=True)
+
         # Tüm bireylerin fitness puanlarını yazdır
         print(f"\n--- Generation {generation}: Fitness Scores ---")
-        for i, (_, fitness_score) in enumerate(next_generation_with_fitness, start=1):
+        for i, (_, fitness_score) in enumerate(sorted_next_generation, start=1):
             print(f"Schedule {i}: Fitness = {fitness_score}")
 
         # Toplam fitness puanını yazdır
@@ -67,3 +69,12 @@ def run_genetic_algorithm(
         population = [schedule for schedule, _ in next_generation_with_fitness]
 
     print("\n=== Algorithm Completed ===")
+    
+    # Tüm schedule'ları ve fitness puanlarını yazdır
+    print("\n--- Final Generation: All Schedules and Fitness Scores ---")
+    for i, (schedule, fitness_score) in enumerate(sorted_next_generation, start=1):
+        print(f"Schedule {i}: Fitness = {fitness_score}")
+        print("Schedule Structure:")
+        for day in schedule:
+            print(day)
+        print("-" * 50)

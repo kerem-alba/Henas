@@ -1,10 +1,11 @@
 import random
 import math
-from config.algorithm_config import e, etr, tr
+from config.algorithm_config import e, etr, tr, ecr, printOn
 
 def handle_elites(population_with_fitness_score):
     next_generation_pool = []  # Gelecek nesil havuzu
-    tournament_pool = []  # Turnuva havuzu
+    pre_tournament_pool = []  # Turnuva havuzu
+    parent_pool = [] # Parent havuzu
 
     # Elit bireyleri seç (en yüksek fitness'a sahip ilk 'elite_count' birey)
     elites = population_with_fitness_score[:e]
@@ -13,41 +14,63 @@ def handle_elites(population_with_fitness_score):
     for elite in elites:
         if random.random() <= etr:
             next_generation_pool.append(elite)  # Elit birey doğrudan yeni nesle geçer
+            if printOn:
+                print ("Elite transferred to next generation: ", elite[1])
         else:
-            tournament_pool.append(elite)  # Geçmeyen birey turnuva havuzuna eklenir
+        # Elit birey ecr oranına göre parent_pool veya pre_tournament_pool'a gider
+            if random.random() <= ecr:
+                parent_pool.append(elite)  # Elit birey parent havuzuna eklenir
+                if printOn:
+                    print("Elite added to parent pool: ", elite[1])
+            else:
+                pre_tournament_pool.append(elite)  # Elit birey turnuva öncesi havuza eklenir
+                if printOn:
+                    print("Elite added to pre-tournament pool: ", elite[1])
 
-    # Geriye kalan bireyleri turnuva havuzuna ekle
-    tournament_pool += population_with_fitness_score[e:]
-
-    return next_generation_pool, tournament_pool
-
-
-def random_preselect_tournament_pool(tournament_pool):
-    filtered_size = math.ceil(tr * len(tournament_pool))
+    # Geriye kalan bireyleri pre turnuva havuzuna ekle
+    pre_tournament_pool += population_with_fitness_score[e:]
     
-    # Rastgele birey seç
-    filtered_pool = random.sample(tournament_pool, filtered_size)
-    return filtered_pool
+    if printOn:
+        print("Not elites to pre-tournament pool: ", len(pre_tournament_pool))
 
-def create_parent_pool_from_pairs(filtered_pool):
-    parent_pool = []
+    return next_generation_pool, pre_tournament_pool, parent_pool
 
-    # Turnuva havuzundaki bireyleri karıştır
-    random.shuffle(filtered_pool)
 
-    # İkili eşleşme yap
-    for i in range(0, len(filtered_pool) - 1, 2):
-        # Eşleşen iki birey
-        individual1 = filtered_pool[i]
-        individual2 = filtered_pool[i + 1]
+def distribute_to_pools(pre_tournament_pool, parent_pool):
+    tournament_pool = []
+
+    for individual in pre_tournament_pool:
+        if random.random() < tr:
+            tournament_pool.append(individual)  # Turnuvaya katılır
+        else:
+            parent_pool.append(individual)  # Doğrudan parent havuzuna geçer
+
+    if printOn:
+        print("Tournament pool size: ", len(tournament_pool))
+        print("Parent pool size before tournament:", len(parent_pool))
+
+    return tournament_pool, parent_pool
+
+
+def append_parents_from_tournament_pool(tournament_pool, parent_pool):
+
+    while len(tournament_pool) > 1:
+        # Turnuva havuzundan rastgele iki birey seç
+        individual1, individual2 = random.sample(tournament_pool, 2)
 
         # Daha yüksek fitness değerine sahip bireyi parent havuzuna ekle
         winner = individual1 if individual1[1] > individual2[1] else individual2
         parent_pool.append(winner)
 
+        # Seçilen bireyleri turnuva havuzundan çıkar
+        tournament_pool.remove(individual1)
+        tournament_pool.remove(individual2)
+
     # Eğer havuzda tek birey kaldıysa, bu bireyi doğrudan parent havuzuna ekle
-    if len(filtered_pool) % 2 == 1:
-        parent_pool.append(filtered_pool[-1])
+    if len(tournament_pool) == 1:
+        parent_pool.append(tournament_pool[0])
+    if printOn:
+        print("Parent pool size after tournament:", len(parent_pool))
 
     return parent_pool
 

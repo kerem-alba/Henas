@@ -1,29 +1,50 @@
-from config.algorithm_config import ps, shuffle_sequential, cr, population_size
+from config.algorithm_config import ps, shuffle_sequential, cr, population_size, printOn
 import random
 
-def pair_parents(parent_pool):
+def pair_parents(parent_pool, next_generation_pool):
 
     pairs = []
+    current_size = len(next_generation_pool)  # Şu anki yeni nesil boyutu
+    required_children = population_size - current_size  # Gerekli çocuk sayısı
+
+    if required_children <= 0:
+        if printOn:
+            print("Next generation pool zaten dolu.")
+        return pairs  # Eşleşmeye gerek yok
 
     if ps == "random":
-        # RANDOM STRATEGY: Tam rastgele eşleşme
-        for _ in range(len(parent_pool) // 2):
-            pair = random.sample(parent_pool, 2)  # Rastgele iki parent seç
+        # RANDOM STRATEGY: Rastgele eşleşmeler
+        while len(pairs) * 2 < required_children:
+            pair = random.sample(parent_pool, 2)  # Rastgele iki ebeveyn seç
             pairs.append(tuple(pair))
+            if printOn:
+                print("Random Pair: Parent1 Fitness =", pair[0][1], ", Parent2 Fitness =", pair[1][1])
 
     elif ps == "sequential":
-        # SEQUENTIAL STRATEGY: Tüm parentlar eşleşir
+        # SEQUENTIAL STRATEGY: Ardışık eşleşmeler
         if shuffle_sequential:
             random.shuffle(parent_pool)  # Parent havuzu karıştırılır
         else:
             parent_pool.sort(key=lambda x: x[1], reverse=True)  # Fitness puanına göre sıralanır
+
+        start_index = 0 
+        while len(pairs) * 2 < required_children:
+            for i in range(start_index, len(parent_pool) - 1, 2):
+                if len(pairs) * 2 >= required_children:
+                    break
+                pairs.append((parent_pool[i], parent_pool[i + 1]))
+                if printOn:
+                    print("Sequential Pair: Parent1 Fitness =", parent_pool[i][1], ", Parent2 Fitness =", parent_pool[i + 1][1])
         
-        # Ardışık eşleşmeler yap
-        for i in range(0, len(parent_pool) - 1, 2):
-            pairs.append((parent_pool[i], parent_pool[i + 1]))
+            # Başlangıç indeksini kaydır
+            start_index = (start_index + 1) % 2  # İlk bireyi atlayarak başla
+
+            # Eğer eşleşme yapılacak birey kalmazsa döngüden çık
+            if start_index >= len(parent_pool) - 1:
+                break
 
         # Tek birey artarsa, eşleşmeden bırakılabilir
-        if len(parent_pool) % 2 == 1:
+        if len(parent_pool) % 2 == 1 and len(pairs) * 2 < required_children:
             pairs.append((parent_pool[-1], None))  # Son parent eşleşmedi
 
     else:
@@ -32,16 +53,7 @@ def pair_parents(parent_pool):
     return pairs
 
 def pmx_crossover(parent1, parent2):
-    """
-    Partially Mapped Crossover (PMX) işlemi.
-
-    Args:
-        parent1 (tuple): İlk ebeveyn (schedule, fitness_score).
-        parent2 (tuple): İkinci ebeveyn (schedule, fitness_score).
-
-    Returns:
-        list: Çocuk bireyler [(child1_schedule, None), (child2_schedule, None)].
-    """
+    
     schedule1, schedule2 = parent1[0], parent2[0]
     length = len(schedule1)
 
@@ -79,16 +91,6 @@ def pmx_crossover(parent1, parent2):
 
 
 def perform_crossover(pair):
-    """
-    Çift bireyler arasında çaprazlama yapar.
-
-    Args:
-        pair (tuple): Ebeveyn çift [(parent1_schedule, fitness_score), (parent2_schedule, fitness_score)].
-        crossover_rate (float): Çaprazlama ihtimali (0 ile 1 arasında).
-
-    Returns:
-        list: Çocuk bireyler [(child1_schedule, None), (child2_schedule, None)].
-    """
     parent1, parent2 = pair
 
     if parent2 is None:
@@ -103,17 +105,6 @@ def perform_crossover(pair):
         return [parent1, parent2]
 
 def generate_next_generation_with_pmx(pairs, next_generation_pool):
-    """
-    PMX yöntemiyle yeni nesli oluşturur.
-
-    Args:
-        pairs (list): Eşleşen çiftler [(parent1, parent2), ...].
-        next_generation_pool (list): Önceden seçilen elit bireyler [(schedule, fitness_score), ...].
-        population_size (int): Yeni nesilde olması gereken toplam birey sayısı.
-
-    Returns:
-        list: Yeni nesil [(schedule, fitness_score), ...].
-    """
     # Elit bireyler zaten next_generation_pool içinde
     new_offspring = []
 
@@ -127,8 +118,12 @@ def generate_next_generation_with_pmx(pairs, next_generation_pool):
 
     # Fazlalık bireyleri kaldır
     if len(next_generation_pool) > population_size:
+        if printOn:
+            print ("Population size exceeded. Removing individuals.")
         next_generation_pool = random.sample(next_generation_pool, population_size)
     elif len(next_generation_pool) < population_size:
+        if printOn:
+            print ("Population size not reached. Adding individuals.")
         deficit = population_size - len(next_generation_pool)
 
         # Eksik bireyleri tamamla
@@ -138,6 +133,12 @@ def generate_next_generation_with_pmx(pairs, next_generation_pool):
                 if len(next_generation_pool) >= deficit
                 else random.choices(next_generation_pool, k=deficit)  # Tekrar seçime izin verilir
             )
+            if printOn:
+                print("\n--- Additional Individuals Added to Next Generation ---")
+            for i, (_, fitness_score) in enumerate(additional_individuals, start=1):
+                if printOn:
+                    print(f"Individual {i}: Fitness = {fitness_score}")
+                
             next_generation_pool.extend(additional_individuals)
         else:
             raise ValueError("Next generation pool is empty. Cannot generate additional individuals.")
