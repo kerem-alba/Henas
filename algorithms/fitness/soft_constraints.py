@@ -1,5 +1,6 @@
-from config.algorithm_config import penalty_unequal_day_night_shifts, penalty_two_night_shifts, penalty_weekend_free, penalty_hierarchy_mismatch, min_doctors_per_area
-from services.database_service import get_doctor_seniority, get_shift_areas
+from config.algorithm_config import penalty_unequal_day_night_shifts, penalty_two_night_shifts, penalty_weekend_free, penalty_hierarchy_mismatch
+from services.database_service import  get_shift_areas
+from config.shift_updates import min_doctors_per_area
 
 def check_unequal_day_night_shifts(schedule):
 

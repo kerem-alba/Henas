@@ -21,3 +21,10 @@ shift_updates = {
     "Yaşar Can Ersöz": 7,
     "Anıl Aydın": 7
 }
+
+min_doctors_per_area = {
+    1: 1,  
+    2: 1, 
+    3: 1, 
+    4: 2   
+}
