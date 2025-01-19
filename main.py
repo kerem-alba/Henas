@@ -1,9 +1,9 @@
 from services.database_service import get_doctors
 from models.doctor import Doctor
-from algorithms.genetic_algorithm import run_genetic_algorithm
-from config.algorithm_config import population_size, shifts_per_day, days
+from genetic_algorithm.genetic_algorithm import run_genetic_algorithm
 from utils.helpers import assign_codes, update_shift_counts_by_name
 from config.shift_updates import shift_updates
+from hill_climbing_algorithm.hill_climbing_algorithm import run_hill_climbing
 import time
 
 # Veritabanından doktor verilerini çek
@@ -20,7 +20,9 @@ print("Doctors:",doctors)
 start_time = time.perf_counter()
 
 # Genetik algoritmayı çalıştır
-run_genetic_algorithm(doctors, doctor_mapping, days=days, shifts_per_day=shifts_per_day, population_size=population_size)
+#run_genetic_algorithm(doctors, doctor_mapping)
+
+run_hill_climbing(doctors, doctor_mapping)
 
 end_time = time.perf_counter()
 

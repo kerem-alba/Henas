@@ -1,7 +1,8 @@
 # Algoritma Parametreleri
-population_size = 10
+population_size = 1
 days = 30
 shifts_per_day = 2
+max_generations = 5000
 
 e = 2 # Elitist count
 etr = 0.4 # Elit transfer rate
@@ -10,11 +11,11 @@ tr = 0.8 # Tournament attendance rate
 ps = "random" # Parent pairing strategy
 shuffle_sequential = False # Parent pairing shuffle sequential
 cr = 0.9 # Crossover rate
-mr = 0.9 # Mutation rate
-mi = 5 # Mutation intensity between 1 - 5
-doctor_swap_rate = 0.5 # Doctor swap rate
-shift_swap_rate = 0.3 # Shift swap rate
-day_swap_rate = 0.2 # Day swap rate
+mr = 1 # Mutation rate
+mi = 1 # Mutation intensity between 1 - 5
+doctor_swap_rate = 1 # Doctor swap rate
+shift_swap_rate = 0 # Shift swap rate
+day_swap_rate = 0 # Day swap rate
 
 initial_fitness_score = 1000  # Başlangıç puanı
 
