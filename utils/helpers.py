@@ -6,7 +6,7 @@ def assign_codes(doctors):
     for index, doctor in enumerate(doctors):
         code = alphabet[index % len(alphabet)]
         doctor.code = code
-        doctor_mapping[code] = doctor.name
+        doctor_mapping[code] = doctor
 
     return doctors, doctor_mapping
 

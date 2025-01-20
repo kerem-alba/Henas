@@ -1,13 +1,11 @@
-from config.algorithm_config import penalty_unequal_day_night_shifts, penalty_two_night_shifts, penalty_weekend_free, penalty_hierarchy_mismatch
+from config.algorithm_config import penalty_unequal_day_night_shifts, penalty_two_night_shifts, penalty_weekend_free, penalty_hierarchy_mismatch, week_start_day
 from services.database_service import  get_shift_areas
 from config.shift_updates import min_doctors_per_area
 
-def check_unequal_day_night_shifts(schedule):
-
+def check_unequal_day_night_shifts(schedule, log):
     penalty = 0
     doctor_shift_counts = {}
 
-    # Her doktorun nöbetlerini say
     for day in schedule:
         day_shift = day[0]  # Gündüz shift
         night_shift = day[1]  # Gece shift
@@ -20,15 +18,20 @@ def check_unequal_day_night_shifts(schedule):
             doctor_shift_counts[doctor] = doctor_shift_counts.get(doctor, {'day': 0, 'night': 0})
             doctor_shift_counts[doctor]['night'] += 1
 
-    # Her doktorun gündüz-gece farkını kontrol et ve ceza hesapla
     for doctor, shifts in doctor_shift_counts.items():
         shift_difference = abs(shifts['day'] - shifts['night'])
         if shift_difference > 1:
             penalty += (shift_difference - 1) * penalty_unequal_day_night_shifts
+            if log:
+                with open("generation_log.txt", "a") as log_file:
+                    log_file.write(
+                        f"Doctor {doctor} has an unequal day-night shift distribution: "
+                        f"{shifts['day']} day shifts and {shifts['night']} night shifts. "
+                    )
 
     return penalty
 
-def check_two_night_shifts(schedule):
+def check_two_night_shifts(schedule, log):
     penalty = 0
     doctor_night_shifts = {}
 
@@ -47,11 +50,15 @@ def check_two_night_shifts(schedule):
         for i in range(len(night_days) - 1):
             if night_days[i + 1] == night_days[i] + 1:  # 2 gece üst üste kontrolü
                 penalty += penalty_two_night_shifts
-                #print(f"Penalty applied: Doctor {doctor} assigned to 2 consecutive night shifts on Day {night_days[i] + 1} and Day {night_days[i + 1] + 1}")
-
+                if log:
+                    with open("generation_log.txt", "a") as log_file:
+                        log_file.write(
+                            f"Doctor {doctor} assigned to 2 consecutive night shifts on Day {night_days[i] + 1} and Day {night_days[i + 1] + 1}\n"
+                        )
     return penalty
 
-def check_weekend_free(schedule, doctors):
+def check_weekend_free(schedule, doctors, log):
+
     penalty = 0
 
     # Her doktorun nöbet tuttuğu günleri takip et
@@ -63,23 +70,34 @@ def check_weekend_free(schedule, doctors):
             for doctor in shift:
                 doctor_shifts[doctor].add(day_index)
 
+    # Haftanın günlerini düzenle
+    total_days = len(schedule)
+    weekend_days = [(week_start_day + 5) % 7, (week_start_day + 6) % 7]  # Cumartesi ve Pazar günleri
+
     # Her doktorun hafta sonu boş olup olmadığını kontrol et
     for doctor, shifts in doctor_shifts.items():
         has_free_weekend = False
 
-        # Tüm hafta sonlarını kontrol et (Cumartesi = 5. gün, Pazar = 6. gün vb.)
-        for i in range(0, len(schedule), 7):  # Her hafta başlangıcı
-            if i + 5 < len(schedule) and i + 6 < len(schedule):  # Cumartesi ve Pazar varsa
-                if (i + 5 not in shifts) and (i + 6 not in shifts):
+        # Tüm hafta sonlarını kontrol et
+        for i in range(0, total_days, 7):  # Her hafta başlangıcı
+            saturday = i + weekend_days[0]
+            sunday = i + weekend_days[1]
+
+            if saturday < total_days and sunday < total_days:
+                if saturday not in shifts and sunday not in shifts:
                     has_free_weekend = True
                     break
 
         # Eğer hiç boş hafta sonu yoksa ceza uygula
         if not has_free_weekend:
             penalty += penalty_weekend_free
-            #print(f"Penalty applied: Doctor {doctor} has no completely free weekend.")
-
+            if log:
+                with open("generation_log.txt", "a") as log_file:
+                    log_file.write(
+                        f"Doctor {doctor} has no completely free weekend.\n"
+                    )
     return penalty
+
 
 
 def check_hierarchy_mismatch(schedule, doctors, doctor_mapping):
