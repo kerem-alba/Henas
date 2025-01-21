@@ -1,4 +1,4 @@
-from config.algorithm_config import penalty_unequal_day_night_shifts, penalty_two_night_shifts, penalty_weekend_free, penalty_hierarchy_mismatch, week_start_day
+from config.algorithm_config import penalty_unequal_day_night_shifts, penalty_two_night_shifts, penalty_weekend_free, penalty_hierarchy_mismatch, week_start_day, hard_penalty
 from services.database_service import  get_shift_areas
 from config.shift_updates import min_doctors_per_area
 
@@ -19,9 +19,9 @@ def check_unequal_day_night_shifts(schedule, log):
             doctor_shift_counts[doctor]['night'] += 1
 
     for doctor, shifts in doctor_shift_counts.items():
-        shift_difference = abs(shifts['day'] - shifts['night'])
-        if shift_difference > 1:
-            penalty += (shift_difference - 1) * penalty_unequal_day_night_shifts
+        shift_difference =  shifts['night'] - shifts['day']
+        if shift_difference > 0:
+            penalty += (shift_difference) * penalty_unequal_day_night_shifts
             if log:
                 with open("generation_log.txt", "a") as log_file:
                     log_file.write(
@@ -100,53 +100,72 @@ def check_weekend_free(schedule, doctors, log):
 
 
 
-def check_hierarchy_mismatch(schedule, doctors, doctor_mapping):
+def check_hierarchy_mismatch(schedule, doctor_mapping, log):
     penalty = 0
-
-    # Doktorların kıdem bilgilerini ve alanlarını al
-    shift_area_mapping = get_shift_areas()
 
     for day_index, day in enumerate(schedule):
         for shift_index, shift in enumerate(day):
-            #print(f"\nDay {day_index + 1}, Shift {shift_index + 1}: {shift}")
+            
+            # 1) Birincil alana göre alan sayıları
+            primary_counts = {area: 0 for area in min_doctors_per_area.keys()}
+            # 2) İkincil alanda kaç doktor bu alana kayabilir?
+            secondary_counts = {area: 0 for area in min_doctors_per_area.keys()}
 
-            # Doktorların max_area_for_level değerlerini saymak için bir sayaç
-            area_counts = {1: 0, 2: 0, 3: 0, 4: 0}
-
+            # Doktorları inceleyip sayıları doldur
             for doctor_code in shift:
-                doctor_name = doctor_mapping.get(doctor_code)
-                doctor_data = next((d for d in doctors if d.name == doctor_name), None)
-                if doctor_data:
-                    # Doktorun alan isimlerini ID'lere çevir
-                    doctor_area_ids = [shift_area_mapping[area] for area in doctor_data.shift_areas if area in shift_area_mapping]
+                doctor = doctor_mapping.get(doctor_code)
+                if not doctor or not doctor.shift_areas:
+                    continue
 
-                    # En yüksek uygun alan (id bazlı)
-                    max_area_for_level = min(doctor_area_ids, default=None)
+                # Birincil alan
+                primary_area = doctor.shift_areas[0]
+                if primary_area in primary_counts:
+                    primary_counts[primary_area] += 1
 
-                    if max_area_for_level:
-                        area_counts[max_area_for_level] += 1
+                # Eğer ikincil alanı varsa, oraya kayma potansiyelini de say
+                if len(doctor.shift_areas) > 1:
+                    secondary_area = doctor.shift_areas[1]
+                    if secondary_area in secondary_counts:
+                        secondary_counts[secondary_area] += 1
 
-            #print(f"Max Area Counts for Shift {shift_index + 1} on Day {day_index + 1}: {area_counts}")
+            # 3) Eksikleri hesapla
+            for area, required_count in min_doctors_per_area.items():
+                current_count = primary_counts.get(area, 0)
+                missing = required_count - current_count
+                
+                # Eğer eksik yoksa devam et
+                if missing <= 0:
+                    continue
 
-            # Eksiklikleri ve kaydırmaları hesapla
-            deficit_counts = {area: max(0, min_doctors_per_area[area] - area_counts[area]) for area in area_counts}
-            #print(f"Deficit Counts for Shift {shift_index + 1} on Day {day_index + 1}: {deficit_counts}")
+                if log:
+                    with open("generation_log.txt", "a") as log_file:
+                        log_file.write(
+                            f"Day {day_index + 1}, Shift {shift_index + 1}: Missing {missing} doctors in Area {area}.\n"
+                        )
 
-            # Alanlardaki kaydırmaları hesapla
-            for area in sorted(min_doctors_per_area.keys(), reverse=True):  # En düşük alanlardan başlayarak
-                while deficit_counts[area] > 0:  # Eksik doktorlar için kaydırma yapılacak
-                    higher_area = area - 1
-                    if higher_area >= 1 and area_counts[higher_area] > min_doctors_per_area[higher_area]:
-                        # Kaydırma işlemi
-                        area_counts[higher_area] -= 1
-                        area_counts[area] += 1
-                        deficit_counts[area] -= 1
-                        penalty += penalty_hierarchy_mismatch
-                        #print(f"Penalty applied: Doctor moved from Area {higher_area} to Area {area}.")
-                    else:
-                        # Kaydırma mümkün değilse döngüyü kır
-                        #print(f"No more doctors available to move from Area {higher_area} to Area {area}. Breaking loop.")
-                        break
+                # 4) Eksik alanı, ikincil alan ile kapatmaya çalış
+                can_fill = secondary_counts.get(area, 0)
+                
+                # İkincil alan ile karşılanabilecek kısım
+                fill = min(missing, can_fill)
+                if fill > 0:
+                    penalty += fill * penalty_hierarchy_mismatch
+                    missing -= fill
+                    if log:
+                        with open("generation_log.txt", "a") as log_file:
+                            log_file.write(
+                                f"Filled {fill} missing doctors in Area {area} using secondary areas. Penalty added: {fill * penalty_hierarchy_mismatch}.\n"
+                            )
 
-    #print("Total Penalty:", penalty)
+                # 5) Hâlâ eksik varsa hard_penalty ekle
+                if missing > 0:
+                    penalty += missing * hard_penalty
+                    if log:
+                        with open("generation_log.txt", "a") as log_file:
+                            log_file.write(
+                                f"Hard penalty applied for {missing} remaining missing doctors in Area {area}. Penalty added: {missing * hard_penalty}.\n"
+                            )
+
     return penalty
+
+

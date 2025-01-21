@@ -1,10 +1,10 @@
 # Algoritma Parametreleri
-max_generations = 50000
+max_generations = 80000
 population_size = 1
 days = 30
 week_start_day = 1
 shifts_per_day = 2
-min_doctors_per_shift = 4
+min_doctors_per_shift = 5
 max_doctors_per_shift = 8
 
 e = 2 # Elitist count
@@ -31,9 +31,7 @@ hard_penalty = 1000
 # Soft penalties
 penalty_unequal_day_night_shifts = 5  # Gündüz-gece farkı cezası
 penalty_weekend_free = 50  # Haftasonu boş olmama cezası
-penalty_two_night_shifts = 20  # 2 gece üst üste nöbet cezası
-penalty_hierarchy_mismatch = 40  # Nöbet alanındaki hiyerarşi hatası cezası
-
-
+penalty_two_night_shifts = 40  # 2 gece üst üste nöbet cezası
+penalty_hierarchy_mismatch = 10  # Nöbet alanındaki hiyerarşi hatası cezası
 
 printOn = False
