@@ -46,18 +46,3 @@ def get_shift_areas():
     conn.close()
     
     return shift_areas
-
-
-def get_seniority_levels():
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
-
-    # Tüm kıdem seviyelerini al
-    cur.execute("SELECT id FROM seniority ORDER BY id")
-    result = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    # Sonuçları bir set olarak döndür
-    return {row[0] for row in result}

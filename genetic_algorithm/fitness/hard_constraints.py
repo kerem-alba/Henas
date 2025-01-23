@@ -68,29 +68,3 @@ def check_three_consecutive_night_shifts(schedule, log):
                             f"Doctor {doctor_code} assigned to 3 consecutive night shifts starting from Day {day_index + 1}\n"
                         )
     return penalty
-
-# Hard Constraint: Her shiftte her kıdemden en az bir doktor var mı?
-def check_coverage_in_shift(schedule, doctor_mapping, seniority_levels, log):
-    penalty = 0
-
-    for day_index, day in enumerate(schedule):
-        for shift_index, shift in enumerate(day):
-            # Shiftteki doktorların kıdemlerini set olarak topla
-            shift_seniorities = set()
-            for doctor_code in shift:
-                # doctor_mapping'ten doğrudan kıdem bilgisini al
-                doctor = doctor_mapping.get(doctor_code)
-                if doctor:
-                    shift_seniorities.add(doctor.seniority)
-            # Eksik kıdem seviyelerini belirle
-            missing_levels = seniority_levels - shift_seniorities
-            if missing_levels:
-                penalty += hard_penalty * len(missing_levels)  # Eksik kıdem başına ceza
-                if log:
-                    with open("generation_log.txt", "a") as log_file:
-                        log_file.write(
-                            f"Day {day_index + 1}, Shift {shift_index + 1} is missing seniority levels: {missing_levels}\n"
-                        )
-
-    return penalty
-

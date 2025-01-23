@@ -1,5 +1,5 @@
 # Algoritma Parametreleri
-max_generations = 80000
+max_generations = 150000
 population_size = 1
 days = 30
 week_start_day = 1
@@ -33,5 +33,6 @@ penalty_unequal_day_night_shifts = 5  # Gündüz-gece farkı cezası
 penalty_weekend_free = 50  # Haftasonu boş olmama cezası
 penalty_two_night_shifts = 40  # 2 gece üst üste nöbet cezası
 penalty_hierarchy_mismatch = 10  # Nöbet alanındaki hiyerarşi hatası cezası
+penalty_shift_on_leave = 50 # İzinli günlerde nöbet tutma cezası
 
 printOn = False

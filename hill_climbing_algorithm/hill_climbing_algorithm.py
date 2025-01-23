@@ -2,12 +2,19 @@ from genetic_algorithm.initial_population import create_initial_population
 from genetic_algorithm.fitness.fitness_methods import calculate_fitness
 from config.algorithm_config import max_generations, doctor_swap_rate, doctor_slide_rate, shift_swap_rate, day_swap_rate, printOn
 from hill_climbing_algorithm.mutation_for_hill import mutate_schedule
-from services.database_service import get_seniority_levels
+import json
 import copy
+
 
 def run_hill_climbing(doctors, doctor_mapping):
     population = create_initial_population(doctors)
-    seniority_levels = get_seniority_levels()
+
+    with open("data\leaves.json", "r") as file:
+        leaves_data = json.load(file)
+
+    leaves = leaves_data["leaves"]
+    leave_dict = {leave["code"]: {"optional_leaves": leave["optional_leaves"], "mandatory_leaves": leave["mandatory_leaves"]} for leave in leaves}
+
     
     found_1000_fitness = False
     for generation in range(max_generations):
@@ -16,9 +23,9 @@ def run_hill_climbing(doctors, doctor_mapping):
 
         for idx in range(len(population)):
             original = population[idx]
-            original_fitness = calculate_fitness(original, doctors, doctor_mapping, seniority_levels, log=False)
+            original_fitness = calculate_fitness(original, doctors, doctor_mapping, leave_dict, log=False)
             mutated = mutate_schedule(copy.deepcopy(original), doc_rate, shift_rate, day_rate, day_rate)
-            mutated_fitness = calculate_fitness(mutated, doctors, doctor_mapping, seniority_levels, log=False)
+            mutated_fitness = calculate_fitness(mutated, doctors, doctor_mapping, leave_dict, log=False)
 
             if mutated_fitness > original_fitness:
                 population[idx] = mutated
@@ -54,7 +61,7 @@ def run_hill_climbing(doctors, doctor_mapping):
                     log_file.write(f"  Day {day_index}: {day}\n")
                 
                 log_file.write(f"\nIndividual {idx + 1} Penalties:\n")
-                print("Final Score: ",calculate_fitness(schedule, doctors, doctor_mapping, seniority_levels,log=True))
+                print("Final Score: ",calculate_fitness(schedule, doctors, doctor_mapping, leave_dict, log=True))
 
 
 

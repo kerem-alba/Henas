@@ -1,4 +1,4 @@
-from config.algorithm_config import penalty_unequal_day_night_shifts, penalty_two_night_shifts, penalty_weekend_free, penalty_hierarchy_mismatch, week_start_day, hard_penalty
+from config.algorithm_config import penalty_unequal_day_night_shifts, penalty_two_night_shifts, penalty_weekend_free, penalty_hierarchy_mismatch, week_start_day, penalty_shift_on_leave, hard_penalty
 from services.database_service import  get_shift_areas
 from config.shift_updates import min_doctors_per_area
 
@@ -169,3 +169,33 @@ def check_hierarchy_mismatch(schedule, doctor_mapping, log):
     return penalty
 
 
+def check_leave_days(schedule, leave_dict, log):
+   
+    penalty = 0
+
+    for day_index, day in enumerate(schedule):
+            for shift_index, shift in enumerate(day):
+                for doctor_code in shift:
+                    # Doktor izin bilgisi varsa kontrol et
+                    if doctor_code in leave_dict:
+                        leave_info = leave_dict[doctor_code]
+
+                        # Optional izin ihlali
+                        if [day_index + 1, shift_index] in leave_info["optional_leaves"]:
+                            penalty += penalty_shift_on_leave
+                            if log:
+                                with open("generation_log.txt", "a") as log_file:
+                                    log_file.write(
+                                        f"Day {day_index + 1}, Shift {shift_index}: Doctor {doctor_code} has an optional leave but assigned to a shift. Soft penalty: {penalty_shift_on_leave}.\n"
+                                    )
+
+                        # Mandatory izin ihlali
+                        if [day_index + 1, shift_index] in leave_info["mandatory_leaves"]:
+                            penalty += hard_penalty
+                            if log:
+                                with open("generation_log.txt", "a") as log_file:
+                                    log_file.write(
+                                        f"Day {day_index + 1}, Shift {shift_index}: Doctor {doctor_code} has a mandatory leave but assigned to a shift. Hard penalty: {hard_penalty}.\n"
+                                    )
+
+    return penalty

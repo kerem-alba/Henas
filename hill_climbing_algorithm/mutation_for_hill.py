@@ -13,14 +13,14 @@ def mutate_schedule(schedule, doc_rate, slide_rate, shift_rate, day_rate):
     if mutation_type == "doctor_swap":
         return doctor_swap(schedule)
     elif mutation_type == "doctor_slide":
-        schedule = doctor_slide(schedule)
+        return doctor_slide(schedule)
     elif mutation_type == "shift_swap":
         return shift_swap(schedule)
     elif mutation_type == "day_swap":
         return day_swap(schedule)
 
     # Eğer mutasyon türü seçilmezse (teknik olarak mümkün değil), orijinali döndür
-    return schedule
+
 
 
 def doctor_swap(schedule):
