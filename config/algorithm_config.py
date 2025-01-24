@@ -1,5 +1,5 @@
 # Algoritma Parametreleri
-max_generations = 150000
+max_generations = 5000
 population_size = 1
 days = 30
 week_start_day = 1
@@ -14,12 +14,12 @@ tr = 0.8 # Tournament attendance rate
 ps = "random" # Parent pairing strategy
 shuffle_sequential = False # Parent pairing shuffle sequential
 cr = 0.9 # Crossover rate
-mr = 1 # Mutation rate
-mi = 1 # Mutation intensity between 1 - 5
+mr = 0.8 # Mutation rate
+mi = 3 # Mutation intensity between 1 - 5
 
 
-doctor_swap_rate = 0.4 # Doctor swap rate
-doctor_slide_rate = 0.2 # Doctor slide rate
+doctor_swap_rate = 0.3 # Doctor swap rate
+doctor_slide_rate = 0.3 # Doctor slide rate
 shift_swap_rate = 0.2 # Shift swap rate
 day_swap_rate = 0.2 # Day swap rate
 
@@ -34,5 +34,3 @@ penalty_weekend_free = 50  # Haftasonu boş olmama cezası
 penalty_two_night_shifts = 40  # 2 gece üst üste nöbet cezası
 penalty_hierarchy_mismatch = 10  # Nöbet alanındaki hiyerarşi hatası cezası
 penalty_shift_on_leave = 50 # İzinli günlerde nöbet tutma cezası
-
-printOn = False

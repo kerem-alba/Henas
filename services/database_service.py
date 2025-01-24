@@ -15,7 +15,7 @@ def get_doctors():
 
     # Doktorların kıdem bilgilerini ve nöbet alanlarını çek
     cur.execute("""
-        SELECT d.name, d.seniority_id, s.max_shifts_per_month, array_agg(sa.id)
+        SELECT d.name, d.seniority_id, s.max_shifts_per_month, array_agg(sa.id ORDER BY sa.id)
         FROM doctors d
         JOIN seniority s ON d.seniority_id = s.id
         JOIN LATERAL unnest(s.shift_area_ids) AS area_id ON true

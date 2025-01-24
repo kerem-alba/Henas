@@ -1,12 +1,13 @@
 from genetic_algorithm.initial_population import create_initial_population
 from genetic_algorithm.fitness.fitness_methods import calculate_fitness
-from config.algorithm_config import max_generations, doctor_swap_rate, doctor_slide_rate, shift_swap_rate, day_swap_rate, printOn
-from hill_climbing_algorithm.mutation_for_hill import mutate_schedule
+from config.algorithm_config import max_generations, doctor_swap_rate, doctor_slide_rate, shift_swap_rate, day_swap_rate
+from genetic_algorithm.mutation.mutation_methods import mutate_schedule
 import json
 import copy
 
 
 def run_hill_climbing(doctors, doctor_mapping):
+
     population = create_initial_population(doctors)
 
     with open("data\leaves.json", "r") as file:
@@ -15,16 +16,15 @@ def run_hill_climbing(doctors, doctor_mapping):
     leaves = leaves_data["leaves"]
     leave_dict = {leave["code"]: {"optional_leaves": leave["optional_leaves"], "mandatory_leaves": leave["mandatory_leaves"]} for leave in leaves}
 
-    
     found_1000_fitness = False
     for generation in range(max_generations):
 
-        doc_rate, shift_rate, shift_rate, day_rate = get_swap_rates(generation)
+        doc_rate, slide_rate, shift_rate, day_rate = get_swap_rates(generation)
 
         for idx in range(len(population)):
             original = population[idx]
             original_fitness = calculate_fitness(original, doctors, doctor_mapping, leave_dict, log=False)
-            mutated = mutate_schedule(copy.deepcopy(original), doc_rate, shift_rate, day_rate, day_rate)
+            mutated = mutate_schedule(copy.deepcopy(original), doc_rate, slide_rate, shift_rate, day_rate)
             mutated_fitness = calculate_fitness(mutated, doctors, doctor_mapping, leave_dict, log=False)
 
             if mutated_fitness > original_fitness:

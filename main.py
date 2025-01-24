@@ -19,7 +19,6 @@ print("Doctors:",doctors)
 
 start_time = time.perf_counter()
 
-# Genetik algoritmayı çalıştır
 #run_genetic_algorithm(doctors, doctor_mapping)
 
 run_hill_climbing(doctors, doctor_mapping)

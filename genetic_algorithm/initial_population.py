@@ -1,5 +1,5 @@
 import random
-from config.algorithm_config import printOn, days, shifts_per_day, population_size
+from config.algorithm_config import days, shifts_per_day, population_size
 
 
 def create_initial_population(doctors):
@@ -19,8 +19,6 @@ def create_initial_population(doctors):
             shift_type = index % shifts_per_day
             schedule[day][shift_type].append(doctor_code)
 
-        if printOn:
-            print("schedule:", schedule)
         population.append(schedule)
 
     return population
