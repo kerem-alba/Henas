@@ -10,7 +10,7 @@ def run_hill_climbing(doctors, doctor_mapping):
 
     population = create_initial_population(doctors)
 
-    with open("data\leaves.json", "r") as file:
+    with open("data/leaves.json", "r") as file:
         leaves_data = json.load(file)
 
     leaves = leaves_data["leaves"]
@@ -47,8 +47,6 @@ def run_hill_climbing(doctors, doctor_mapping):
 
         if found_1000_fitness:
             break
-
-
         
     for idx in range(len(population)):
         population[idx] = sort_doctors_in_shifts(population[idx])
@@ -63,7 +61,7 @@ def run_hill_climbing(doctors, doctor_mapping):
                 log_file.write(f"\nIndividual {idx + 1} Penalties:\n")
                 print("Final Score: ",calculate_fitness(schedule, doctors, doctor_mapping, leave_dict, log=True))
 
-
+    return population
 
 def get_swap_rates(generation):
     if generation < 1000:
