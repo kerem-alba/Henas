@@ -1,4 +1,3 @@
-
 def assign_codes(doctors):
     alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     doctor_mapping = {}
@@ -9,13 +8,3 @@ def assign_codes(doctors):
         doctor_mapping[code] = doctor
 
     return doctors, doctor_mapping
-
-
-
-def update_shift_counts_by_name(doctors, updates):
-    for doctor in doctors:
-        if doctor.name in updates:
-            doctor.shift_count = updates[doctor.name]
-    return doctors
-
-

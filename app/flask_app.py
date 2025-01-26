@@ -1,13 +1,203 @@
-from flask import Flask, jsonify
-from run_algorithm import run_algorithm  # run_algorithm'i içe aktar
+from flask import Flask, jsonify, request
+from services.database_service import (
+    get_detailed_doctors,
+    get_doctors,
+    add_doctor,
+    update_doctor,
+    delete_doctor,
+    get_seniority,
+    add_seniority,
+    update_seniority,
+    delete_seniority,
+    get_shift_areas,
+    add_shift_area,
+)
+from run_algorithm import run_algorithm
+import json
+
 
 app = Flask(__name__)
 
-@app.route('/run', methods=['GET','POST'])
 
-def run_hill_climbing_endpoint():
+@app.route("/get-doctors", methods=["GET"])
+def get_detailed_doctors_endpoint():
     try:
-        result = run_algorithm()
-        return jsonify({"status": "success", "result": result})  # Sonucu döndür
+        doctors = get_detailed_doctors()
+
+        formatted_doctors = [
+            {
+                "name": doc[0],
+                "seniority_id": doc[1],
+                "max_shifts_per_month": doc[2],
+                "shift_areas": doc[3],
+            }
+            for doc in doctors
+        ]
+        return app.response_class(
+            response=json.dumps(formatted_doctors, ensure_ascii=False),
+            status=200,
+            mimetype="application/json",
+        )
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/run-algorithm", methods=["POST"])
+def run_algorithm_endpoint():
+    try:
+        data = request.json
+
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        result = run_algorithm(data)
+
+        return jsonify({"schedule": result}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/doctors", methods=["GET"])
+def list_doctors_endpoint():
+    try:
+        doctors = get_doctors()
+        return jsonify(doctors)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/doctors", methods=["POST"])
+def add_doctor_endpoint():
+    try:
+        data = request.json
+
+        if not data.get("name") or not data.get("seniority_id"):
+            return jsonify({"error": "name and seniority_id are required"}), 400
+
+        new_id = add_doctor(data)
+
+        return jsonify({"id": new_id, "message": "Doctor added successfully"}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/doctors/<int:doctor_id>", methods=["PUT"])
+def update_doctor_endpoint(doctor_id):
+    try:
+        data = request.json
+
+        if not data.get("name") or not data.get("seniority_id"):
+            return jsonify({"error": "name and seniority_id are required"}), 400
+
+        update_doctor(doctor_id, data)
+
+        return jsonify({"message": "Doctor updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/doctors/<int:doctor_id>", methods=["DELETE"])
+def delete_doctor_endpoint(doctor_id):
+    try:
+        delete_doctor(doctor_id)
+        return jsonify({"message": "Doctor deleted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/seniority", methods=["GET"])
+def list_seniority():
+    try:
+        seniority = get_seniority()
+        return jsonify(seniority), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/seniority", methods=["POST"])
+def add_seniority_endpoint():
+    try:
+        data = request.json
+
+        if (
+            not data.get("seniority_name")
+            or not data.get("max_shifts_per_month")
+            or not data.get("shift_area_ids")
+        ):
+            return (
+                jsonify(
+                    {
+                        "error": "seniority_name, max_shifts_per_month, and shift_area_ids are required"
+                    }
+                ),
+                400,
+            )
+
+        new_id = add_seniority(data)
+        return jsonify({"id": new_id, "message": "Seniority added successfully"}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/seniority/<int:seniority_id>", methods=["PUT"])
+def update_seniority_endpoint(seniority_id):
+    try:
+        data = request.json
+
+        if (
+            not data.get("seniority_name")
+            or not data.get("max_shifts_per_month")
+            or not data.get("shift_area_ids")
+        ):
+            return (
+                jsonify(
+                    {
+                        "error": "seniority_name, max_shifts_per_month, and shift_area_ids are required"
+                    }
+                ),
+                400,
+            )
+
+        update_seniority(seniority_id, data)
+        return jsonify({"message": "Seniority updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/seniority/<int:seniority_id>", methods=["DELETE"])
+def delete_seniority_endpoint(seniority_id):
+    try:
+        delete_seniority(seniority_id)
+        return jsonify({"message": "Seniority deleted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/shift-areas", methods=["GET"])
+def list_shift_areas():
+    try:
+        shift_areas = get_shift_areas()
+        return jsonify(shift_areas), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/shift-areas", methods=["POST"])
+def add_shift_area_endpoint():
+    try:
+        data = request.json
+
+        if not data.get("area_name"):
+            return jsonify({"error": "area_name is required"}), 400
+
+        new_id = add_shift_area(data)
+        return jsonify({"id": new_id, "message": "Shift area added successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

@@ -5,7 +5,6 @@ from config.algorithm_config import days, shifts_per_day, population_size
 def create_initial_population(doctors):
     population = []
 
-    # Her doktorun kodunu nöbet sayısına göre listele ve karıştır
     temp_list = [doctor.code for doctor in doctors for _ in range(doctor.shift_count)]
     random.shuffle(temp_list)
 
@@ -22,4 +21,3 @@ def create_initial_population(doctors):
         population.append(schedule)
 
     return population
-

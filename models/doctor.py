@@ -1,10 +1,22 @@
 class Doctor:
-    def __init__(self, code: str, name: str, seniority: int, shift_count: int, shift_areas: list = None):
+
+    def __init__(
+        self,
+        code: str,
+        name: str,
+        seniority_id: int,
+        shift_count: int,
+        shift_areas: list,
+        optional_leaves: list = None,
+        mandatory_leaves: list = None,
+    ):
         self.code = code
         self.name = name
-        self.seniority = seniority
+        self.seniority_id = seniority_id
         self.shift_count = shift_count
-        self.shift_areas = shift_areas if shift_areas else []
+        self.shift_areas = shift_areas
+        self.optional_leaves = optional_leaves or []
+        self.mandatory_leaves = mandatory_leaves or []
 
     def __repr__(self):
         return (
