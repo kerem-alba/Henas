@@ -1,0 +1,17 @@
+# Sanal ortam
+venv/
+
+# Node.js bağımlılıkları (Frontend)
+frontend/node_modules/
+
+# IDEA ve VSCode ayar dosyaları
+.idea/
+.vscode/
+
+# Çalışma dosyaları
+*.log
+*.env
+
+# Çıkış dosyaları
+dist/
+build/

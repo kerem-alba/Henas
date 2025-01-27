@@ -1,9 +1,12 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
+
 from services.database_service import (
     get_detailed_doctors,
     get_doctors,
     add_doctor,
     update_doctor,
+    update_all_doctors,
     delete_doctor,
     get_seniority,
     add_seniority,
@@ -17,6 +20,7 @@ import json
 
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route("/get-doctors", methods=["GET"])
@@ -97,6 +101,23 @@ def update_doctor_endpoint(doctor_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/doctors/all", methods=["PUT"])
+def update_doctors_endpoint():
+    try:
+        data = request.json
+
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        update_all_doctors(data)
+
+        return jsonify({"message": "Doctors updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 
 @app.route("/doctors/<int:doctor_id>", methods=["DELETE"])

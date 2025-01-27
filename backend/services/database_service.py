@@ -43,16 +43,17 @@ def get_doctors():
 
     cur.execute(
         """
-        SELECT id, name, seniority_id
-        FROM doctors
-        ORDER BY id
+    SELECT d.name, s.seniority_name
+    FROM doctors d
+    INNER JOIN seniority s ON d.seniority_id = s.id
     """
     )
     result = cur.fetchall()
 
-    doctors = []
-    for row in result:
-        doctors.append({"id": row[0], "name": row[1], "seniority_id": row[2]})
+    doctors = [
+        {"name": row[0], "seniority_name": row[1]}
+        for row in result
+    ]
 
     cur.close()
     conn.close()
@@ -85,6 +86,24 @@ def update_doctor(doctor_id, data):
     conn.commit()
     cur.close()
     conn.close()
+
+def update_all_doctors(data):
+    print("Gelen Veri:", data)  # Gelen veriyi kontrol etmek için yazdır
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    for doctor in data:
+        print("SQL Parametreleri:", doctor["seniority_id"], doctor["name"])  # SQL parametrelerini kontrol et
+        cur.execute(
+            "UPDATE doctors SET seniority_id = %s WHERE TRIM(LOWER(name)) = TRIM(LOWER(%s))",
+            (doctor["seniority_id"], doctor["name"]),
+        )
+        print("Güncellenen Satır Sayısı:", cur.rowcount)  # Güncellenen satır sayısını yazdır
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
 
 
 def delete_doctor(doctor_id):
