@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2.extras import Json  # JSON formatı için
 
 # Veritabanı bağlantı bilgileri
 DB_CONFIG = {
@@ -43,7 +44,7 @@ def get_doctors():
 
     cur.execute(
         """
-    SELECT d.name, s.seniority_name
+    SELECT d.id, d.name, s.seniority_name
     FROM doctors d
     INNER JOIN seniority s ON d.seniority_id = s.id
     """
@@ -51,7 +52,7 @@ def get_doctors():
     result = cur.fetchall()
 
     doctors = [
-        {"name": row[0], "seniority_name": row[1]}
+        {"id": row[0], "name": row[1], "seniority_name": row[2]}  # 'id' alanını ekledik
         for row in result
     ]
 
@@ -75,34 +76,29 @@ def add_doctor(data):
     return new_id
 
 
-def update_doctor(doctor_id, data):
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
-
-    cur.execute(
-        "UPDATE doctors SET name = %s, seniority_id = %s WHERE id = %s",
-        (data["name"], data["seniority_id"], doctor_id),
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
-
 def update_all_doctors(data):
-    print("Gelen Veri:", data)  # Gelen veriyi kontrol etmek için yazdır
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
 
-    for doctor in data:
-        print("SQL Parametreleri:", doctor["seniority_id"], doctor["name"])  # SQL parametrelerini kontrol et
-        cur.execute(
-            "UPDATE doctors SET seniority_id = %s WHERE TRIM(LOWER(name)) = TRIM(LOWER(%s))",
-            (doctor["seniority_id"], doctor["name"]),
-        )
-        print("Güncellenen Satır Sayısı:", cur.rowcount)  # Güncellenen satır sayısını yazdır
+        for doctor in data:
+            cur.execute(
+                """
+                UPDATE doctors
+                SET name = %s,
+                    seniority_id = %s
+                WHERE id = %s
+                """,
+                (doctor["name"], doctor["seniority_id"], doctor["id"]),
+            )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        print("update_all_doctors fonksiyonunda hata:", e)  # <-- Hata detayını görmek için
+        raise
 
 
 
@@ -146,6 +142,39 @@ def get_seniority():
 
     return seniority_list
 
+def get_detailed_seniority():
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    # Seniority tablosunu ve shift_areas ile eşleşen area_name'leri getirelim
+    cur.execute(
+        """
+        SELECT s.id, s.seniority_name, s.max_shifts_per_month, 
+               ARRAY_AGG(sa.area_name ORDER BY sa.id) AS shift_area_names
+        FROM seniority s
+        LEFT JOIN LATERAL unnest(s.shift_area_ids) AS area_id ON true
+        LEFT JOIN shift_areas sa ON sa.id = area_id
+        GROUP BY s.id, s.seniority_name, s.max_shifts_per_month
+        ORDER BY s.id
+        """
+    )
+    result = cur.fetchall()
+
+    seniority_list = []
+    for row in result:
+        seniority_list.append(
+            {
+                "id": row[0],
+                "seniority_name": row[1],
+                "max_shifts_per_month": row[2],
+                "shift_area_names": row[3],
+            }
+        )
+
+    cur.close()
+    conn.close()
+
+    return seniority_list
 
 def add_seniority(data):
     conn = psycopg2.connect(**DB_CONFIG)
@@ -163,22 +192,37 @@ def add_seniority(data):
     return new_id
 
 
-def update_seniority(seniority_id, data):
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
 
-    cur.execute(
-        "UPDATE seniority SET seniority_name = %s, max_shifts_per_month = %s, shift_area_ids = %s WHERE id = %s",
-        (
-            data["seniority_name"],
-            data["max_shifts_per_month"],
-            data["shift_area_ids"],
-            seniority_id,
-        ),
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
+
+def update_all_seniorities(data):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        for seniority in data:
+            cur.execute(
+                """
+                UPDATE seniority
+                SET seniority_name = %s,
+                    max_shifts_per_month = %s,
+                    shift_area_ids = %s
+                WHERE id = %s
+                """,
+                (
+                    seniority["seniority_name"],
+                    seniority["max_shifts_per_month"],
+                    Json(seniority["shift_area_ids"]),  # PostgreSQL JSON/array formatına çevir
+                    seniority["id"],
+                ),
+            )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        print("update_all_seniorities fonksiyonunda hata:", e)  # Hata mesajını göster
+        raise
 
 
 def delete_seniority(seniority_id):

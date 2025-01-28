@@ -5,12 +5,12 @@ from services.database_service import (
     get_detailed_doctors,
     get_doctors,
     add_doctor,
-    update_doctor,
     update_all_doctors,
     delete_doctor,
     get_seniority,
+    get_detailed_seniority,
     add_seniority,
-    update_seniority,
+    update_all_seniorities,
     delete_seniority,
     get_shift_areas,
     add_shift_area,
@@ -86,37 +86,16 @@ def add_doctor_endpoint():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-@app.route("/doctors/<int:doctor_id>", methods=["PUT"])
-def update_doctor_endpoint(doctor_id):
-    try:
-        data = request.json
-
-        if not data.get("name") or not data.get("seniority_id"):
-            return jsonify({"error": "name and seniority_id are required"}), 400
-
-        update_doctor(doctor_id, data)
-
-        return jsonify({"message": "Doctor updated successfully"}), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
     
 @app.route("/doctors/all", methods=["PUT"])
 def update_doctors_endpoint():
     try:
         data = request.json
-
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
-
         update_all_doctors(data)
-
         return jsonify({"message": "Doctors updated successfully"}), 200
-
     except Exception as e:
+        print("Hata Ayrıntısı:", e)
         return jsonify({"error": str(e)}), 500
-
 
 
 
@@ -134,6 +113,14 @@ def delete_doctor_endpoint(doctor_id):
 def list_seniority():
     try:
         seniority = get_seniority()
+        return jsonify(seniority), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/seniority/detailed", methods=["GET"])
+def list_detailed_seniority():
+    try:
+        seniority = get_detailed_seniority()
         return jsonify(seniority), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -165,31 +152,15 @@ def add_seniority_endpoint():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/seniority/<int:seniority_id>", methods=["PUT"])
-def update_seniority_endpoint(seniority_id):
+
+@app.route("/seniority/all", methods=["PUT"])
+def update_seniorities_endpoint():
     try:
         data = request.json
-
-        if (
-            not data.get("seniority_name")
-            or not data.get("max_shifts_per_month")
-            or not data.get("shift_area_ids")
-        ):
-            return (
-                jsonify(
-                    {
-                        "error": "seniority_name, max_shifts_per_month, and shift_area_ids are required"
-                    }
-                ),
-                400,
-            )
-
-        update_seniority(seniority_id, data)
-        return jsonify({"message": "Seniority updated successfully"}), 200
-
+        update_all_seniorities(data)
+        return jsonify({"message": "Seniorities updated successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/seniority/<int:seniority_id>", methods=["DELETE"])
 def delete_seniority_endpoint(seniority_id):
@@ -208,6 +179,8 @@ def list_shift_areas():
         return jsonify(shift_areas), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
 
 
 @app.route("/shift-areas", methods=["POST"])
