@@ -82,7 +82,7 @@ export const getShiftAreas = async () => {
 
 export const updatedSeniorities = async (seniorities) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/seniority`, {
+    const response = await fetch(`${API_BASE_URL}/seniority/all`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

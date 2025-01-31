@@ -211,7 +211,7 @@ def update_all_seniorities(data):
                 (
                     seniority["seniority_name"],
                     seniority["max_shifts_per_month"],
-                    Json(seniority["shift_area_ids"]),  # PostgreSQL JSON/array formatına çevir
+                    '{' + ','.join(map(str, seniority["shift_area_ids"])) + '}',  # PostgreSQL array formatına çevir
                     seniority["id"],
                 ),
             )
