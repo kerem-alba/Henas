@@ -13,6 +13,66 @@ export const getDoctors = async () => {
   }
 };
 
+export const addDoctor = async (name, seniorityId) => {
+  try {
+    const requestData = { name, seniority_id: seniorityId };
+
+    const response = await fetch(`${API_BASE_URL}/doctors`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Doktor eklerken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const updateDoctors = async (doctors) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/doctors/all`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(doctors), // Gönderilecek JSON verisi
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json(); // Backend'den gelen yanıt
+  } catch (error) {
+    console.error("Doktorları güncellerken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const deleteDoctor = async (doctorId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/doctors/${doctorId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Doktor silerken hata oluştu:", error);
+    throw error;
+  }
+};
+
 export const getSeniorities = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/seniority`);
@@ -39,23 +99,68 @@ export const getDetailedSeniorities = async () => {
   }
 };
 
-export const updateDoctors = async (doctors) => {
+export const addSeniority = async (name, maxShifts, shiftAreas = []) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/doctors/all`, {
+    const requestData = {
+      seniority_name: name,
+      max_shifts_per_month: maxShifts,
+      shift_area_ids: shiftAreas.map((area) => area.id), // Shift alanlarını ID olarak gönderiyoruz
+    };
+
+    console.log("Gönderilen veri:", requestData); // Konsolda kontrol et
+
+    const response = await fetch(`${API_BASE_URL}/seniority`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Kıdem eklerken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const updatedSeniorities = async (seniorities) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/seniority/all`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(doctors), // Gönderilecek JSON verisi
+      body: JSON.stringify(seniorities),
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json(); // Backend'den gelen yanıt
+    return await response.json();
   } catch (error) {
-    console.error("Doktorları güncellerken hata oluştu:", error);
+    console.error("Kıdemleri güncellerken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const deleteSeniority = async (seniorityId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/seniority/${seniorityId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Kıdem silerken hata oluştu:", error);
     throw error;
   }
 };
@@ -80,14 +185,14 @@ export const getShiftAreas = async () => {
   }
 };
 
-export const updatedSeniorities = async (seniorities) => {
+export const addShiftArea = async (areaName) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/seniority/all`, {
-      method: "PUT",
+    const response = await fetch(`${API_BASE_URL}/shift-areas`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(seniorities),
+      body: JSON.stringify({ area_name: areaName }),
     });
 
     if (!response.ok) {
@@ -96,7 +201,43 @@ export const updatedSeniorities = async (seniorities) => {
 
     return await response.json();
   } catch (error) {
-    console.error("Kıdemleri güncellerken hata oluştu:", error);
+    console.error("Nöbet alanı eklerken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const updateShiftAreas = async (shiftAreas) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/shift-areas/all`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(shiftAreas),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Nöbet alanlarını güncellerken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const deleteShiftArea = async (areaId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/shift-areas/${areaId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Nöbet alanı silerken hata oluştu:", error);
     throw error;
   }
 };

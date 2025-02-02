@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { getDoctors, getSeniorities, updateDoctors, getDetailedSeniorities, getShiftAreas, updatedSeniorities } from "../services/apiService";
+import {
+  getDoctors,
+  getSeniorities,
+  updateDoctors,
+  getDetailedSeniorities,
+  getShiftAreas,
+  updatedSeniorities,
+  updateShiftAreas,
+  addShiftArea,
+  deleteShiftArea,
+  addDoctor,
+  deleteDoctor,
+  addSeniority,
+  deleteSeniority,
+} from "../services/apiService";
 import DoctorTable from "../components/DoctorTable";
 import SeniorityTable from "../components/SeniorityTable";
+import ShiftAreasTable from "../components/ShiftAreasTable";
 
 const Hospital = () => {
   const [doctors, setDoctors] = useState([]);
@@ -18,6 +33,8 @@ const Hospital = () => {
           getDetailedSeniorities(),
           getShiftAreas(),
         ]);
+
+        console.log("Backend'den gelen detailedSenioritiesData:", detailedSenioritiesData);
 
         const sortedDoctors = doctorsData.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -41,30 +58,60 @@ const Hospital = () => {
   const handleSeniorityChange = (index, newSeniorityId) => {
     setDoctors((prevDoctors) => {
       const updatedDoctors = [...prevDoctors];
-      const matchedSeniority = seniorities.find((seniority) => seniority.id === parseInt(newSeniorityId));
-      if (matchedSeniority) {
-        updatedDoctors[index].seniority_name = matchedSeniority.name;
+      const matched = seniorities.find((s) => s.id === parseInt(newSeniorityId, 10));
+      if (matched) {
+        updatedDoctors[index].seniority_name = matched.name;
       }
       return updatedDoctors;
     });
   };
 
   const handleNameChange = (index, newName) => {
-    setDoctors((prevDoctors) => {
-      const updatedDoctors = [...prevDoctors];
-      updatedDoctors[index].name = newName;
-      return updatedDoctors;
+    setDoctors((prev) => {
+      const updated = [...prev];
+      updated[index].name = newName;
+      return updated;
     });
   };
 
+  const handleAddDoctor = async (name, seniorityId) => {
+    try {
+      const response = await addDoctor(name, seniorityId);
+      if (!response.id) throw new Error("Backend geçerli bir ID döndürmedi.");
+
+      setDoctors((prev) => [
+        ...prev,
+        {
+          id: response.id,
+          name,
+          seniority_name: seniorities.find((s) => s.id === seniorityId)?.name || "Bilinmeyen",
+        },
+      ]);
+    } catch (error) {
+      console.error("Doktor eklenirken hata:", error);
+      alert("Doktor eklenirken bir hata oluştu.");
+    }
+  };
+
+  // Doktor silme
+  const handleDeleteDoctor = async (doctorId) => {
+    try {
+      await deleteDoctor(doctorId);
+      setDoctors((prev) => prev.filter((doc) => doc.id !== doctorId));
+    } catch (error) {
+      console.error("Doktor silinirken hata:", error);
+      alert("Doktor silinirken bir hata oluştu.");
+    }
+  };
+
+  // Doktorlar değişikliklerini kaydet
   const handleSaveChanges = async () => {
     try {
       const payload = doctors.map((doctor) => ({
         id: doctor.id,
         name: doctor.name.trim(),
-        seniority_id: seniorities.find((seniority) => seniority.name === doctor.seniority_name).id,
+        seniority_id: seniorities.find((s) => s.name === doctor.seniority_name).id,
       }));
-
       const response = await updateDoctors(payload);
       alert(response.message);
     } catch (error) {
@@ -73,57 +120,81 @@ const Hospital = () => {
     }
   };
 
-  const handleSeniorityShiftArea = (index, area_name, isChecked) => {
-    setDetailedSeniorities((prevSeniorities) => {
-      const updatedSeniorities = [...prevSeniorities];
-      if (isChecked) {
-        updatedSeniorities[index].shift_area_names.push(area_name);
-      } else {
-        updatedSeniorities[index].shift_area_names = updatedSeniorities[index].shift_area_names.filter((name) => name !== area_name);
-      }
-      return updatedSeniorities;
-    });
-  };
-
-  // Kıdemler: Max Nöbet sayısı değiştirme
+  // Kıdem tablosu - Max Nöbet değişince
   const handleMaxShiftsChange = (index, newMaxShifts) => {
-    setDetailedSeniorities((prevSeniorities) => {
-      const updatedSeniorities = [...prevSeniorities];
-      updatedSeniorities[index].max_shifts_per_month = newMaxShifts;
-      return updatedSeniorities;
+    setDetailedSeniorities((prev) => {
+      const updated = [...prev];
+      updated[index].max_shifts_per_month = newMaxShifts;
+      return updated;
     });
   };
 
-  // Kıdemler: Kıdem adı değiştirme
+  // Kıdem tablosu - Kıdem adı değişince
   const handleSeniorityNameChange = (index, newName) => {
-    setDetailedSeniorities((prevSeniorities) => {
-      const updatedSeniorities = [...prevSeniorities];
-      updatedSeniorities[index].seniority_name = newName;
-      return updatedSeniorities;
+    setDetailedSeniorities((prev) => {
+      const updated = [...prev];
+      updated[index].seniority_name = newName;
+      return updated;
     });
   };
 
-  // Kıdemler: Kaydet
+  // Yeni kıdem ekleme
+  const handleAddSeniority = async (seniorityName, maxShifts) => {
+    try {
+      // İstersen tüm shift area'ları ilk başta aktif eklemek isteyebilirsin
+      const shiftAreaIds = shiftAreas.map((area) => area.id);
+
+      const response = await addSeniority(seniorityName, maxShifts, shiftAreaIds);
+      if (!response.id) throw new Error("Kıdem eklerken ID gelmedi.");
+
+      setDetailedSeniorities((prev) => [
+        ...prev,
+        {
+          id: response.id,
+          seniority_name: seniorityName,
+          max_shifts_per_month: maxShifts,
+          // Yeni eklenen kıdemde tüm alanları aktif saymak istersen:
+          shift_area_names: shiftAreas.map((a) => a.area_name),
+        },
+      ]);
+    } catch (error) {
+      console.error("Kıdem eklenirken hata:", error);
+      alert("Kıdem eklenirken bir hata oluştu.");
+    }
+  };
+
+  // Kıdem silme
+  const handleDeleteSeniority = async (seniorityId) => {
+    try {
+      await deleteSeniority(seniorityId);
+      setDetailedSeniorities((prev) => prev.filter((sen) => sen.id !== seniorityId));
+    } catch (error) {
+      console.error("Kıdem silinirken hata:", error);
+      alert("Kıdem silinirken bir hata oluştu.");
+    }
+  };
+
+  // Kıdem değişikliklerini kaydet (backend'e)
   const handleSaveSeniorityChanges = async () => {
     try {
-      // shift_area_names => shift_area_ids dönüştür
-      const cleanedData = detailedSeniorities.map((seniority) => ({
-        id: seniority.id,
-        seniority_name: seniority.seniority_name,
-        max_shifts_per_month: seniority.max_shifts_per_month,
+      // shift_area_names -> shift_area_ids
+      const cleanedData = detailedSeniorities.map((sen) => ({
+        id: sen.id,
+        seniority_name: sen.seniority_name,
+        max_shifts_per_month: sen.max_shifts_per_month,
         shift_area_ids: [
           ...new Set(
-            seniority.shift_area_names
-              .map((areaName) => {
-                const area = shiftAreas.find((a) => a.area_name === areaName);
-                return area ? area.id : null;
+            sen.shift_area_names
+              .map((name) => {
+                const found = shiftAreas.find((a) => a.area_name === name);
+                return found ? found.id : null;
               })
               .filter((id) => id !== null)
           ),
         ],
       }));
 
-      console.log("Backend'e gönderilen temizlenmiş veri:", cleanedData);
+      console.log("Backend'e giden veri:", cleanedData);
 
       const response = await updatedSeniorities(cleanedData);
       alert(response.message);
@@ -133,28 +204,92 @@ const Hospital = () => {
     }
   };
 
+  // Shift alanı tablosu - İsim değişince
+  const handleShiftAreaNameChange = (index, newName) => {
+    setShiftAreas((prev) => {
+      const updated = [...prev];
+      updated[index].area_name = newName;
+      return updated;
+    });
+  };
+
+  // Shift alanları değişikliklerini kaydet
+  const handleSaveShiftAreaChanges = async () => {
+    try {
+      const payload = shiftAreas.map((a) => ({
+        id: a.id,
+        area_name: a.area_name.trim(),
+      }));
+      const response = await updateShiftAreas(payload);
+      alert(response.message);
+    } catch (error) {
+      console.error("Nöbet alanı değişiklikleri kaydedilirken hata:", error);
+      alert("Değişiklikler kaydedilirken bir hata oluştu.");
+    }
+  };
+
+  // Yeni nöbet alanı ekle
+  const handleAddShiftArea = async (areaName) => {
+    try {
+      const response = await addShiftArea(areaName);
+      if (!response.id) {
+        throw new Error("Backend'den geçerli bir yanıt gelmedi.");
+      }
+      setShiftAreas((prev) => [...prev, { id: response.id, area_name: areaName }]);
+    } catch (error) {
+      console.error("Nöbet alanı eklenirken hata:", error);
+      alert("Nöbet alanı eklenirken bir hata oluştu.");
+    }
+  };
+
+  // Nöbet alanı silme
+  const handleDeleteShiftArea = async (areaId) => {
+    try {
+      await deleteShiftArea(areaId);
+      setShiftAreas((prev) => prev.filter((area) => area.id !== areaId));
+    } catch (error) {
+      console.error("Nöbet alanı silinirken hata:", error);
+      alert("Nöbet alanı silinirken bir hata oluştu.");
+    }
+  };
+
   return (
     <div className="container mt-4">
       <h2>Veritabanı Yönetimi</h2>
-      <div className="row">
-        {/* Doktor Tablosu */}
-        <DoctorTable
-          doctors={doctors}
-          seniorities={seniorities}
-          handleNameChange={handleNameChange}
-          handleSeniorityChange={handleSeniorityChange}
-          handleSaveChanges={handleSaveChanges}
-        />
+      <div className="row mt-5">
+        {/* Sol tarafta Doktorlar */}
+        <div className="col-lg-6 col-md-12 mb-4">
+          <DoctorTable
+            doctors={doctors}
+            seniorities={seniorities}
+            handleNameChange={handleNameChange}
+            handleSeniorityChange={handleSeniorityChange}
+            handleSaveChanges={handleSaveChanges}
+            handleAddDoctor={handleAddDoctor}
+            handleDeleteDoctor={handleDeleteDoctor}
+          />
+        </div>
 
-        {/* Kıdem Tablosu */}
-        <SeniorityTable
-          detailedSeniorities={detailedSeniorities}
-          shiftAreas={shiftAreas}
-          handleSeniorityShiftArea={handleSeniorityShiftArea}
-          handleMaxShiftsChange={handleMaxShiftsChange}
-          handleSeniorityNameChange={handleSeniorityNameChange}
-          handleSaveSeniorityChanges={handleSaveSeniorityChanges}
-        />
+        {/* Sağ tarafta Kıdemler ve Nöbet Alanları */}
+        <div className="col-lg-6 col-md-12 mb-4">
+          <SeniorityTable
+            detailedSeniorities={detailedSeniorities}
+            shiftAreas={shiftAreas}
+            handleMaxShiftsChange={handleMaxShiftsChange}
+            handleSeniorityNameChange={handleSeniorityNameChange}
+            handleSaveSeniorityChanges={handleSaveSeniorityChanges}
+            handleAddSeniority={handleAddSeniority}
+            handleDeleteSeniority={handleDeleteSeniority}
+          />
+
+          <ShiftAreasTable
+            shiftAreas={shiftAreas}
+            handleShiftAreaNameChange={handleShiftAreaNameChange}
+            handleSaveShiftAreaChanges={handleSaveShiftAreaChanges}
+            handleAddShiftArea={handleAddShiftArea}
+            handleDeleteShiftArea={handleDeleteShiftArea}
+          />
+        </div>
       </div>
     </div>
   );

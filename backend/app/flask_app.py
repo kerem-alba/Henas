@@ -14,6 +14,8 @@ from services.database_service import (
     delete_seniority,
     get_shift_areas,
     add_shift_area,
+    update_all_shift_areas,
+    delete_shift_area,
 )
 from run_algorithm import run_algorithm
 import json
@@ -193,5 +195,23 @@ def add_shift_area_endpoint():
 
         new_id = add_shift_area(data)
         return jsonify({"id": new_id, "message": "Shift area added successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/shift-areas/all", methods=["PUT"])
+def update_shift_areas_endpoint():
+    try:
+        data = request.json
+        update_all_shift_areas(data)
+        return jsonify({"message": "Shift areas updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/shift-areas/<int:shift_area_id>", methods=["DELETE"])
+def delete_shift_area_endpoint(shift_area_id):
+    try:
+        delete_shift_area(shift_area_id)
+        return jsonify({"message": "Shift area deleted successfully"}), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500

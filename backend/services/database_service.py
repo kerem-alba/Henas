@@ -146,14 +146,14 @@ def get_detailed_seniority():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
-    # Seniority tablosunu ve shift_areas ile eşleşen area_name'leri getirelim
+    # JSONB içindeki sıralamaya göre nöbet alanlarını sıralı döndür
     cur.execute(
         """
         SELECT s.id, s.seniority_name, s.max_shifts_per_month, 
-               ARRAY_AGG(sa.area_name ORDER BY sa.id) AS shift_area_names
+               ARRAY_AGG(sa.area_name ORDER BY area_ids.ordinality) AS shift_area_names
         FROM seniority s
-        LEFT JOIN LATERAL unnest(s.shift_area_ids) AS area_id ON true
-        LEFT JOIN shift_areas sa ON sa.id = area_id
+        LEFT JOIN LATERAL jsonb_array_elements_text(s.shift_area_ids) WITH ORDINALITY AS area_ids(area_id, ordinality) ON true
+        LEFT JOIN shift_areas sa ON sa.id = area_ids.area_id::int  -- JSON'dan gelen değeri integer'a çevir
         GROUP BY s.id, s.seniority_name, s.max_shifts_per_month
         ORDER BY s.id
         """
@@ -167,7 +167,7 @@ def get_detailed_seniority():
                 "id": row[0],
                 "seniority_name": row[1],
                 "max_shifts_per_month": row[2],
-                "shift_area_names": row[3],
+                "shift_area_names": row[3] if row[3] is not None else [],
             }
         )
 
@@ -175,6 +175,8 @@ def get_detailed_seniority():
     conn.close()
 
     return seniority_list
+
+
 
 def add_seniority(data):
     conn = psycopg2.connect(**DB_CONFIG)
@@ -194,6 +196,8 @@ def add_seniority(data):
 
 
 
+import json
+
 def update_all_seniorities(data):
     try:
         conn = psycopg2.connect(**DB_CONFIG)
@@ -211,7 +215,7 @@ def update_all_seniorities(data):
                 (
                     seniority["seniority_name"],
                     seniority["max_shifts_per_month"],
-                    '{' + ','.join(map(str, seniority["shift_area_ids"])) + '}',  # PostgreSQL array formatına çevir
+                    json.dumps(seniority["shift_area_ids"]),  # JSON olarak sakla
                     seniority["id"],
                 ),
             )
@@ -221,8 +225,9 @@ def update_all_seniorities(data):
         conn.close()
 
     except Exception as e:
-        print("update_all_seniorities fonksiyonunda hata:", e)  # Hata mesajını göster
+        print("update_all_seniorities fonksiyonunda hata:", e)
         raise
+
 
 
 def delete_seniority(seniority_id):
@@ -264,17 +269,24 @@ def add_shift_area(data):
     return new_id
 
 
-def update_shift_area(area_id, data):
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
+def update_all_shift_areas(data):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
 
-    cur.execute(
-        "UPDATE shift_areas SET area_name = %s WHERE id = %s",
-        (data["area_name"], area_id),
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
+        for area in data:
+            cur.execute(
+                "UPDATE shift_areas SET area_name = %s WHERE id = %s",
+                (area["area_name"], area["id"]),
+            )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        print("update_all_shift_areas fonksiyonunda hata:", e)  # Hata mesajını göster
+        raise
 
 
 def delete_shift_area(area_id):
