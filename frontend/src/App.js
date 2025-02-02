@@ -1,6 +1,7 @@
 import "./App.css";
 import Header from "./components/Header";
 import Hospital from "./pages/Hospital";
+import Schedules from "./pages/Schedules";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<div>Anasayfa İçeriği</div>} />
         <Route path="/hospital" element={<Hospital />} />
+        <Route path="/schedules" element={<Schedules />} />
       </Routes>
     </BrowserRouter>
   );

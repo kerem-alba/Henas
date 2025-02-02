@@ -26,7 +26,7 @@ const DoctorTable = ({ doctors, seniorities, handleNameChange, handleSeniorityCh
               <td>
                 <select
                   className="form-select"
-                  value={seniorities.find((s) => s.name === doctor.seniority_name)?.id || ""}
+                  // value={seniorities.find((s) => s.name === doctor.seniority_name)?.id || ""}
                   onChange={(e) => handleSeniorityChange(index, e.target.value)}
                 >
                   <option disabled value="">
