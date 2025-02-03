@@ -1,0 +1,21 @@
+.mini-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.mini-table th,
+.mini-table td {
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  border: 1px solid black;
+  cursor: pointer;
+}
+
+.mini-table .mandatory {
+  background-color: red;
+}
+
+.mini-table .optional {
+  background-color: yellow;
+}

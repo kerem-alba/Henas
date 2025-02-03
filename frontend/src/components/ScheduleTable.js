@@ -1,52 +1,25 @@
 import React, { useState } from "react";
-import LeaveModal from "../modals/LeaveModal";
+import LeavesTable from "./LeavesTable";
 
 const ScheduleTable = ({ doctors, detailedSeniorities, monthYear }) => {
   const [localShiftCounts, setLocalShiftCounts] = useState({});
-  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
-  const [selectedDoctorIndex, setSelectedDoctorIndex] = useState(null);
-  const [leaveType, setLeaveType] = useState(null);
+  const [mandatoryLeaves, setMandatoryLeaves] = useState([]);
+  const [optionalLeaves, setOptionalLeaves] = useState([]);
 
-  // Modal'ı aç
-  const openLeaveModal = (doctorIndex, type) => {
-    console.log("Modal Açılıyor:", doctorIndex, type); // Kontrol için
-    setSelectedDoctorIndex(doctorIndex);
-    setLeaveType(type);
-    setIsLeaveModalOpen(true);
-  };
-
-  // Modal'ı kapat
-  const closeLeaveModal = () => {
-    console.log("closeLeaveModal çağrıldı!"); // Kapatma işlemi tetikleniyor mu?
-
-    setIsLeaveModalOpen(false);
-    setSelectedDoctorIndex(null);
-    setLeaveType(null);
-  };
-
-  // İzinleri kaydet
-  const handleSaveLeaves = (selectedDays) => {
-    console.log("Seçilen izinler:", selectedDays);
-    console.log("Doktor Index:", selectedDoctorIndex);
-    console.log("İzin Türü:", leaveType);
-    // Burada izinleri doktorun verisine kaydedebilirsiniz
-  };
-
-  console.log("Modal Render Durumu:", isLeaveModalOpen);
-  console.log("Final Modal Render Durumu:", isLeaveModalOpen);
+  console.log("mandatoryLeaves!!!!:", mandatoryLeaves);
+  console.log("optionalLeaves!!!!!:", optionalLeaves);
 
   return (
     <div className="table-responsive">
       <table className="table table-bordered">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Doktor Adı</th>
-            <th>Kıdem</th>
-            <th>Nöbet Alanları</th>
-            <th>Nöbet Sayısı</th>
-            <th>Zorunlu İzinler</th>
-            <th>Opsiyonel İzinler</th>
+            <th className="col-1">#</th>
+            <th className="col-2">Doktor Adı</th>
+            <th className="col-1">Kıdem</th>
+            <th className="col-1">Nöbet Alanları</th>
+            <th className="col-1">Nöbet Sayısı</th>
+            <th className="col-5">İzinler</th>
           </tr>
         </thead>
         <tbody>
@@ -72,30 +45,15 @@ const ScheduleTable = ({ doctors, detailedSeniorities, monthYear }) => {
                   />
                 </td>
                 <td>
-                  <button className="btn btn-warning" onClick={() => openLeaveModal(index, "mandatory")}>
-                    Zorunlu İzin Ekle
-                  </button>
-                </td>
-                <td>
-                  <button className="btn btn-info" onClick={() => openLeaveModal(index, "optional")}>
-                    Opsiyonel İzin Ekle
-                  </button>
+                  <div style={{ overflowX: "auto", maxWidth: "500px" }}>
+                    <LeavesTable setMandatoryLeaves={setMandatoryLeaves} setOptionalLeaves={setOptionalLeaves} />
+                  </div>
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
-
-      {/* Modal yalnızca açıkken render edilecek */}
-      {isLeaveModalOpen && (
-        <LeaveModal
-          isOpen={isLeaveModalOpen} // ✅ isOpen olarak gönderiyoruz!
-          onClose={closeLeaveModal}
-          monthYear={monthYear}
-          onSave={handleSaveLeaves}
-        />
-      )}
     </div>
   );
 };
