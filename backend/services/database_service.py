@@ -47,6 +47,7 @@ def get_doctors():
     SELECT d.id, d.name, s.seniority_name
     FROM doctors d
     INNER JOIN seniority s ON d.seniority_id = s.id
+    ORDER BY d.id
     """
     )
     result = cur.fetchall()
@@ -146,14 +147,14 @@ def get_detailed_seniority():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
-    # JSONB içindeki sıralamaya göre nöbet alanlarını sıralı döndür
     cur.execute(
         """
         SELECT s.id, s.seniority_name, s.max_shifts_per_month, 
-               ARRAY_AGG(sa.area_name ORDER BY area_ids.ordinality) AS shift_area_names
+               ARRAY_AGG(sa.area_name ORDER BY area_ids.ordinality) AS shift_area_names,
+               ARRAY_AGG(area_ids.area_id::int ORDER BY area_ids.ordinality) AS shift_area_ids
         FROM seniority s
         LEFT JOIN LATERAL jsonb_array_elements_text(s.shift_area_ids) WITH ORDINALITY AS area_ids(area_id, ordinality) ON true
-        LEFT JOIN shift_areas sa ON sa.id = area_ids.area_id::int  -- JSON'dan gelen değeri integer'a çevir
+        LEFT JOIN shift_areas sa ON sa.id = area_ids.area_id::int
         GROUP BY s.id, s.seniority_name, s.max_shifts_per_month
         ORDER BY s.id
         """
@@ -168,6 +169,7 @@ def get_detailed_seniority():
                 "seniority_name": row[1],
                 "max_shifts_per_month": row[2],
                 "shift_area_names": row[3] if row[3] is not None else [],
+                "shift_area_ids": row[4] if row[4] is not None else []
             }
         )
 
@@ -175,6 +177,7 @@ def get_detailed_seniority():
     conn.close()
 
     return seniority_list
+
 
 
 

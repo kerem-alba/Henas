@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { getDoctors, getDetailedSeniorities, getSeniorities } from "../services/apiService";
+import { getDoctors, getDetailedSeniorities, getSeniorities, runAlgorithm } from "../services/apiService";
 import ScheduleTable from "../components/ScheduleTable";
 
 const Schedules = () => {
   const [doctors, setDoctors] = useState([]);
   const [detailedSeniorities, setDetailedSeniorities] = useState([]);
   const [seniorities, setSeniorities] = useState([]);
+  const [scheduleData, setScheduleData] = useState([]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -25,13 +26,11 @@ const Schedules = () => {
   console.log("Detailed Seniorities:", detailedSeniorities);
   console.log("Seniorities:", seniorities);
 
-  const monthYear = "2024-02-01";
-
   return (
     <div className="container mt-4">
       <h2>Nöbet Programı Oluştur</h2>
-      <ScheduleTable doctors={doctors} detailedSeniorities={detailedSeniorities} monthYear={monthYear} />
-      <button className="btn btn-primary mt-3" onClick={() => console.log("Algoritmayı çalıştır")}>
+      <ScheduleTable doctors={doctors} detailedSeniorities={detailedSeniorities} setScheduleData={setScheduleData} />
+      <button className="btn btn-primary mt-3" onClick={() => runAlgorithm(scheduleData)}>
         Algoritmayı Çalıştır
       </button>
     </div>

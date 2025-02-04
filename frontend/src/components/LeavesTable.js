@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./styles.css";
 
-const LeavesTable = ({ setMandatoryLeaves, setOptionalLeaves }) => {
+const LeavesTable = ({ doctorId, setMandatoryLeaves, setOptionalLeaves }) => {
   const days = Array.from({ length: 30 }, (_, i) => i + 1);
   const shifts = ["Gündüz", "Gece"];
 
@@ -16,17 +16,17 @@ const LeavesTable = ({ setMandatoryLeaves, setOptionalLeaves }) => {
       let newOptional = [];
 
       setMandatoryLeaves((prevMandatory) => {
-        newMandatory = prevMandatory.filter((item) => !(item[0] === day && item[1] === shiftIndex));
+        newMandatory = prevMandatory.filter((item) => !(item[0] === doctorId && item[1] === day && item[2] === shiftIndex));
         return newMandatory;
       });
 
       setOptionalLeaves((prevOptional) => {
-        newOptional = prevOptional.filter((item) => !(item[0] === day && item[1] === shiftIndex));
+        newOptional = prevOptional.filter((item) => !(item[0] === doctorId && item[1] === day && item[2] === shiftIndex));
         return newOptional;
       });
 
       if (current === "mandatory") {
-        setOptionalLeaves((prevOptional) => [...prevOptional, [day, shiftIndex]]);
+        setOptionalLeaves((prevOptional) => [...prevOptional, [doctorId, day, shiftIndex]]);
         return {
           ...prev,
           [day]: { ...prev[day], [shiftType]: "optional" },
@@ -37,7 +37,7 @@ const LeavesTable = ({ setMandatoryLeaves, setOptionalLeaves }) => {
           [day]: { ...prev[day], [shiftType]: undefined },
         };
       } else {
-        setMandatoryLeaves((prevMandatory) => [...prevMandatory, [day, shiftIndex]]);
+        setMandatoryLeaves((prevMandatory) => [...prevMandatory, [doctorId, day, shiftIndex]]);
         return {
           ...prev,
           [day]: { ...prev[day], [shiftType]: "mandatory" },
@@ -51,7 +51,7 @@ const LeavesTable = ({ setMandatoryLeaves, setOptionalLeaves }) => {
       <table className="mini-table">
         <thead>
           <tr>
-            <th></th> {/* Boşluk sütunu */}
+            <th></th>
             {days.map((day) => (
               <th key={day}>{day}</th>
             ))}
@@ -65,7 +65,7 @@ const LeavesTable = ({ setMandatoryLeaves, setOptionalLeaves }) => {
                 const shiftStatus = selectedShifts[day]?.[shiftType];
                 return (
                   <td
-                    key={`${day}-${shiftType}`}
+                    key={`${doctorId}-${day}-${shiftType}`}
                     onClick={() => toggleShift(day, shiftType)}
                     className={shiftStatus === "mandatory" ? "mandatory" : shiftStatus === "optional" ? "optional" : ""}
                   ></td>

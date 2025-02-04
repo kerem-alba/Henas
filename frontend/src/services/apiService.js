@@ -241,3 +241,24 @@ export const deleteShiftArea = async (areaId) => {
     throw error;
   }
 };
+
+export const runAlgorithm = async (scheduleData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/run-algorithm`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(scheduleData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Algoritmayı çalıştırırken hata oluştu:", error);
+    throw error;
+  }
+};
