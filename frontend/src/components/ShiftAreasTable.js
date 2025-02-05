@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 
-const ShiftAreasTable = ({ shiftAreas, handleShiftAreaNameChange, handleSaveShiftAreaChanges, handleAddShiftArea, handleDeleteShiftArea }) => {
+const ShiftAreasTable = ({
+  shiftAreas,
+  handleShiftAreaNameChange,
+  handleMinDoctorsPerAreaChange,
+  handleSaveShiftAreaChanges,
+  handleAddShiftArea,
+  handleDeleteShiftArea,
+}) => {
   const [newAreaName, setNewAreaName] = useState("");
 
   return (
@@ -11,6 +18,8 @@ const ShiftAreasTable = ({ shiftAreas, handleShiftAreaNameChange, handleSaveShif
           <tr>
             <th>#</th>
             <th>Nöbet Alanı</th>
+            <th>Min. Nöbetçi</th>
+            <th>İşlemler</th>
           </tr>
         </thead>
         <tbody>
@@ -24,6 +33,16 @@ const ShiftAreasTable = ({ shiftAreas, handleShiftAreaNameChange, handleSaveShif
                   value={area.area_name}
                   onChange={(e) => handleShiftAreaNameChange(index, e.target.value)}
                 />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={area.min_doctors_per_area}
+                  onChange={(e) => handleMinDoctorsPerAreaChange(index, e.target.value)}
+                />
+              </td>
+              <td>
                 <button className="btn btn-danger btn-sm ms-auto" onClick={() => handleDeleteShiftArea(area.id)} disabled={!area.id}>
                   <i className="bi bi-trash"></i>
                 </button>

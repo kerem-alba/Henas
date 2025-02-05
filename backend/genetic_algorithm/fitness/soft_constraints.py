@@ -131,9 +131,10 @@ def check_hierarchy_mismatch(schedule, doctors, log):
                 doctor = doctor_dict.get(doctor_code)
                 if not doctor or not doctor.shift_areas:
                     continue
-
+                
                 # Birincil alan
                 primary_area = doctor.shift_areas[0]
+                print("primary_area", primary_area)
                 if primary_area in primary_counts:
                     primary_counts[primary_area] += 1
 

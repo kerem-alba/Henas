@@ -173,9 +173,10 @@ export const getShiftAreas = async () => {
     }
     const data = await response.json();
 
-    const formattedData = Object.entries(data).map(([area_name, id]) => ({
+    const formattedData = Object.entries(data).map(([area_name, details]) => ({
       area_name,
-      id,
+      id: details.id,
+      min_doctors_per_area: details.min_doctors_per_area,
     }));
 
     return formattedData;

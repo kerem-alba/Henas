@@ -247,8 +247,8 @@ def get_shift_areas():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
-    cur.execute("SELECT id, area_name FROM shift_areas")
-    shift_areas = {row[1]: row[0] for row in cur.fetchall()}
+    cur.execute("SELECT id, area_name, min_doctors_per_area  FROM shift_areas")
+    shift_areas = {row[1]: {"id": row[0], "min_doctors_per_area": row[2]} for row in cur.fetchall()}
 
     cur.close()
     conn.close()
@@ -279,8 +279,8 @@ def update_all_shift_areas(data):
 
         for area in data:
             cur.execute(
-                "UPDATE shift_areas SET area_name = %s WHERE id = %s",
-                (area["area_name"], area["id"]),
+                "UPDATE shift_areas SET area_name = %s, min_doctors_per_area = %s  WHERE id = %s",
+                (area["area_name"], area["min_doctors_per_area"], area["id"]),
             )
 
         conn.commit()

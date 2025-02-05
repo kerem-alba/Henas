@@ -213,12 +213,21 @@ const Hospital = () => {
     });
   };
 
+  const handleMinDoctorsPerAreaChange = (index, newMinDoctors) => {
+    setShiftAreas((prev) => {
+      const updated = [...prev];
+      updated[index].min_doctors_per_area = newMinDoctors;
+      return updated;
+    });
+  };
+
   // Shift alanları değişikliklerini kaydet
   const handleSaveShiftAreaChanges = async () => {
     try {
       const payload = shiftAreas.map((a) => ({
         id: a.id,
         area_name: a.area_name.trim(),
+        min_doctors_per_area: a.min_doctors_per_area,
       }));
       const response = await updateShiftAreas(payload);
       alert(response.message);
@@ -285,6 +294,7 @@ const Hospital = () => {
           <ShiftAreasTable
             shiftAreas={shiftAreas}
             handleShiftAreaNameChange={handleShiftAreaNameChange}
+            handleMinDoctorsPerAreaChange={handleMinDoctorsPerAreaChange}
             handleSaveShiftAreaChanges={handleSaveShiftAreaChanges}
             handleAddShiftArea={handleAddShiftArea}
             handleDeleteShiftArea={handleDeleteShiftArea}
