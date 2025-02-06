@@ -1,5 +1,6 @@
 import psycopg2
-from psycopg2.extras import Json  # JSON formatı için
+import json
+
 
 # Veritabanı bağlantı bilgileri
 DB_CONFIG = {
@@ -199,7 +200,6 @@ def add_seniority(data):
 
 
 
-import json
 
 def update_all_seniorities(data):
     try:
@@ -261,15 +261,15 @@ def add_shift_area(data):
     cur = conn.cursor()
 
     cur.execute(
-        "INSERT INTO shift_areas (area_name) VALUES (%s) RETURNING id",
-        (data["area_name"],),
+        "INSERT INTO shift_areas (area_name, min_doctors_per_area) VALUES (%s, %s) RETURNING id",
+        (data["area_name"], data["min_doctors_per_area"]),
     )
     new_id = cur.fetchone()[0]
     conn.commit()
     cur.close()
     conn.close()
-
     return new_id
+
 
 
 def update_all_shift_areas(data):

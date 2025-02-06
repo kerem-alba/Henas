@@ -60,9 +60,9 @@ export default function DraggableShiftAreaList({ allShiftAreas, activeAreaNames,
     return (
       <div
         style={{
-          margin: "4px 0",
-          padding: "8px",
+          padding: "4px",
           border: "1px solid #ccc",
+          borderRadius: 4,
           background: item.active ? "#fff" : "#eee",
           color: item.active ? "#000" : "#999",
           cursor: item.active ? "move" : "pointer",
@@ -73,7 +73,6 @@ export default function DraggableShiftAreaList({ allShiftAreas, activeAreaNames,
         {...handleProps}
       >
         {item.name}
-        {item.active && <div style={{ width: 20, height: 20, background: "black" }} />}
       </div>
     );
   };

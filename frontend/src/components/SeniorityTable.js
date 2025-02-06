@@ -4,7 +4,6 @@ import DraggableShiftAreaList from "./DraggableShiftAreaList"; // Alt bileşen (
 const SeniorityTable = ({
   detailedSeniorities,
   shiftAreas,
-  handleSeniorityShiftArea,
   handleMaxShiftsChange,
   handleSeniorityNameChange,
   handleSaveSeniorityChanges,
@@ -15,43 +14,40 @@ const SeniorityTable = ({
   const [newMaxShifts, setNewMaxShifts] = useState("");
 
   return (
-    <div className="mb-5">
-      <h3>Kıdem Listesi</h3>
-      <table className="table table-bordered">
+    <div className="mb-4">
+      <h3 className="text-center bg-dark text-white p-3 shadow-md rounded-4">Kıdem Listesi</h3>
+      <table className="table table-dark table-striped table-hover shadow-md" style={{ borderRadius: "15px", overflow: "hidden" }}>
         <thead className="thead-dark">
-          <tr>
-            <th className="col-1">#</th>
+          <tr className="align-middle">
+            <th className="col-1 text-center">#</th>
             <th className="col-4">Kıdem Adı</th>
             <th className="col-2"> Max Nöbet</th>
             <th className="col-4">Nöbet Alanları</th>
-            <th className="col-1">İşlem</th>
+            <th className="col-1 text-center">İşlem</th>
           </tr>
         </thead>
         <tbody>
           {detailedSeniorities.map((seniority, index) => (
             <tr key={seniority.id}>
-              <td>{index + 1}</td>
-
-              {/* Kıdem Adı */}
+              <td className="text-center">
+                <div className="mt-2">{index + 1}</div>
+              </td>
               <td>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control bg-secondary text-white"
                   value={seniority.seniority_name}
                   onChange={(e) => handleSeniorityNameChange(index, e.target.value)}
                 />
               </td>
-
-              {/* Max Nöbet */}
               <td>
                 <input
                   type="number"
-                  className="form-control"
+                  className="form-control bg-secondary text-white"
                   value={seniority.max_shifts_per_month}
                   onChange={(e) => handleMaxShiftsChange(index, e.target.value)}
                 />
               </td>
-
               <td>
                 <DraggableShiftAreaList
                   allShiftAreas={shiftAreas}
@@ -62,17 +58,23 @@ const SeniorityTable = ({
                 />
               </td>
 
-              <td>
-                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteSeniority(seniority.id)} disabled={!seniority.id}>
+              <td className="text-center ">
+                <button
+                  className="btn btn-danger btn-sm rounded"
+                  onClick={() => handleDeleteSeniority(seniority.id)}
+                  disabled={!seniority.id}
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="Kıdem Sil"
+                >
                   <i className="bi bi-trash"></i>
                 </button>
               </td>
             </tr>
           ))}
 
-          {/* Yeni kıdem ekleme satırı */}
-          <tr>
-            <td>+</td>
+          <tr className="table-success">
+            <td className="fw-bold text-center align-middle">+</td>
             <td>
               <input
                 type="text"
@@ -91,10 +93,13 @@ const SeniorityTable = ({
                 placeholder="Max nöbet"
               />
             </td>
-            <td>-</td> {/* Yeni eklemede alan listesi yok */}
-            <td>
+            <td></td>
+            <td className="text-center align-middle">
               <button
                 className="btn btn-success btn-sm"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Kıdem Ekle"
                 onClick={() => {
                   if (newSeniorityName.trim() !== "" && newMaxShifts !== "") {
                     handleAddSeniority(newSeniorityName, newMaxShifts);
@@ -111,7 +116,7 @@ const SeniorityTable = ({
         </tbody>
       </table>
 
-      <button className="btn btn-primary mt-3" onClick={handleSaveSeniorityChanges} disabled={detailedSeniorities.length === 0}>
+      <button className="btn btn-success w-100 shadow-md rounded-3" onClick={handleSaveSeniorityChanges} disabled={detailedSeniorities.length === 0}>
         Değişiklikleri Kaydet
       </button>
     </div>

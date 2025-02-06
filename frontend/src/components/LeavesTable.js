@@ -47,8 +47,17 @@ const LeavesTable = ({ doctorId, setMandatoryLeaves, setOptionalLeaves }) => {
   };
 
   return (
-    <div>
-      <table className="mini-table">
+    <div className="table-container">
+      <div className="info-box">
+        <span>
+          <span className="info-square mandatory"></span> Zorunlu İzin
+        </span>
+        <span>
+          <span className="info-square optional"></span> Opsiyonel İzin
+        </span>
+      </div>
+
+      <table className="mini-table text-dark">
         <thead>
           <tr>
             <th></th>

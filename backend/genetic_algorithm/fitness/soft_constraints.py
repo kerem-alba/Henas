@@ -7,7 +7,7 @@ from config.algorithm_config import (
     penalty_shift_on_leave,
     hard_penalty,
 )
-from config.shift_updates import min_doctors_per_area
+import config.globals as g
 
 
 def check_unequal_day_night_shifts(schedule, log):
@@ -118,6 +118,11 @@ def check_hierarchy_mismatch(schedule, doctors, log):
     penalty = 0
     doctor_dict = {doctor.code: doctor for doctor in doctors}
 
+    min_doctors_per_area = {
+        info["id"]: info["min_doctors_per_area"] for area, info in g.shift_areas_data.items()
+    }
+
+
     for day_index, day in enumerate(schedule):
         for shift_index, shift in enumerate(day):
 
@@ -134,7 +139,6 @@ def check_hierarchy_mismatch(schedule, doctors, log):
                 
                 # Birincil alan
                 primary_area = doctor.shift_areas[0]
-                print("primary_area", primary_area)
                 if primary_area in primary_counts:
                     primary_counts[primary_area] += 1
 

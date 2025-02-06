@@ -17,6 +17,7 @@ import {
 import DoctorTable from "../components/DoctorTable";
 import SeniorityTable from "../components/SeniorityTable";
 import ShiftAreasTable from "../components/ShiftAreasTable";
+import "./styles.css";
 
 const Hospital = () => {
   const [doctors, setDoctors] = useState([]);
@@ -36,7 +37,7 @@ const Hospital = () => {
 
         console.log("Backend'den gelen detailedSenioritiesData:", detailedSenioritiesData);
 
-        const sortedDoctors = doctorsData.sort((a, b) => a.name.localeCompare(b.name));
+        const sortedDoctors = doctorsData.sort((a, b) => a.id - b.id);
 
         const seniorityNames = senioritiesData.map((seniority) => ({
           id: seniority.id,
@@ -238,13 +239,13 @@ const Hospital = () => {
   };
 
   // Yeni nöbet alanı ekle
-  const handleAddShiftArea = async (areaName) => {
+  const handleAddShiftArea = async (areaName, minDoctors) => {
     try {
-      const response = await addShiftArea(areaName);
+      const response = await addShiftArea(areaName, minDoctors);
       if (!response.id) {
         throw new Error("Backend'den geçerli bir yanıt gelmedi.");
       }
-      setShiftAreas((prev) => [...prev, { id: response.id, area_name: areaName }]);
+      setShiftAreas((prev) => [...prev, { id: response.id, area_name: areaName, min_doctors_per_area: minDoctors }]);
     } catch (error) {
       console.error("Nöbet alanı eklenirken hata:", error);
       alert("Nöbet alanı eklenirken bir hata oluştu.");
@@ -263,11 +264,10 @@ const Hospital = () => {
   };
 
   return (
-    <div className="container mt-4">
-      <h2>Veritabanı Yönetimi</h2>
+    <div className="container-fluid p-5 background-gradient">
+      <h2 className="fw-bold display-5 text-black ms-3">Hastane Veritabanı</h2>
       <div className="row mt-5">
-        {/* Sol tarafta Doktorlar */}
-        <div className="col-lg-6 col-md-12 mb-4">
+        <div className="col-lg-6 col-md-12 mb-4 px-4">
           <DoctorTable
             doctors={doctors}
             seniorities={seniorities}
@@ -279,8 +279,7 @@ const Hospital = () => {
           />
         </div>
 
-        {/* Sağ tarafta Kıdemler ve Nöbet Alanları */}
-        <div className="col-lg-6 col-md-12 mb-4">
+        <div className="col-lg-6 col-md-12 mb-4 px-4">
           <SeniorityTable
             detailedSeniorities={detailedSeniorities}
             shiftAreas={shiftAreas}

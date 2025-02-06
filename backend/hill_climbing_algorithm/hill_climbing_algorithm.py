@@ -1,3 +1,4 @@
+import copy
 from genetic_algorithm.initial_population import create_initial_population
 from genetic_algorithm.fitness.fitness_methods import calculate_fitness
 from config.algorithm_config import (
@@ -8,15 +9,15 @@ from config.algorithm_config import (
     day_swap_rate,
 )
 from genetic_algorithm.mutation.mutation_methods import mutate_schedule
-import copy
-
+from services.database_service import get_shift_areas
+import config.globals as g
 
 def run_hill_climbing(doctors):
+    g.shift_areas_data = get_shift_areas() 
+    print("shift_areas_data", g.shift_areas_data)
 
     population = create_initial_population(doctors)
-
     for generation in range(max_generations):
-
         doc_rate, slide_rate, shift_rate, day_rate = get_swap_rates(generation)
 
         for idx in range(len(population)):
@@ -84,3 +85,7 @@ def sort_doctors_in_shifts(schedule):
         for shift in day:
             shift.sort()
     return schedule
+
+def get_min_doctors_per_area():
+
+    return 5

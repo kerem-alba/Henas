@@ -1,5 +1,4 @@
 from config.algorithm_config import hard_penalty
-from config.shift_updates import min_doctors_per_area
 from collections import Counter
 
 # Hard Constraint 1: Aynı shift içinde aynı doktor birden fazla kez atanmış mı?

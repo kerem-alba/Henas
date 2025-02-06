@@ -10,7 +10,7 @@ def run_algorithm(doctor_data):
             doc["code"],
             doc["name"],
             doc["seniority_id"],
-            doc["shift_count"],
+            int(doc["shift_count"]),
             doc["shift_areas"],
             doc["optional_leaves"],
             doc["mandatory_leaves"],

@@ -6,30 +6,35 @@ const DoctorTable = ({ doctors, seniorities, handleNameChange, handleSeniorityCh
 
   return (
     <div className="mb-4">
-      <h3>Doktorlar Listesi</h3>
-      <table className="table table-bordered">
+      <h3 className="text-center bg-dark text-white p-3 shadow-md rounded-4">Doktorlar Listesi</h3>
+      <table className="table table-dark table-striped table-hover shadow-md" style={{ borderRadius: "15px", overflow: "hidden" }}>
         <thead className="thead-dark">
-          <tr>
-            <th>#</th>
+          <tr className="align-middle">
+            <th className="text-center">#</th>
             <th>Ad</th>
             <th>Kıdem</th>
-            <th>İşlem</th> {/* Sil butonu için yeni sütun */}
+            <th className="text-center">İşlem</th>
           </tr>
         </thead>
         <tbody>
           {doctors.map((doctor, index) => (
-            <tr key={doctor.id || index}>
-              <td>{index + 1}</td>
+            <tr className="text-center" key={doctor.id || index}>
+              <td className="align-middle">{index + 1}</td>
               <td>
-                <input type="text" className="form-control" value={doctor.name} onChange={(e) => handleNameChange(index, e.target.value)} />
+                <input
+                  type="text"
+                  className="form-control bg-secondary text-white"
+                  value={doctor.name}
+                  onChange={(e) => handleNameChange(index, e.target.value)}
+                />
               </td>
               <td>
                 <select
-                  className="form-select"
-                  // value={seniorities.find((s) => s.name === doctor.seniority_name)?.id || ""}
+                  className="form-select bg-secondary text-white"
+                  value={seniorities.find((s) => s.name === doctor.seniority_name)?.id || ""}
                   onChange={(e) => handleSeniorityChange(index, e.target.value)}
                 >
-                  <option disabled value="">
+                  <option className="bg-light" disabled value="">
                     Kıdem Seç
                   </option>
                   {seniorities.map((seniority) => (
@@ -39,16 +44,22 @@ const DoctorTable = ({ doctors, seniorities, handleNameChange, handleSeniorityCh
                   ))}
                 </select>
               </td>
-              <td>
-                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteDoctor(doctor.id)} disabled={!doctor.id}>
-                  <i className="bi bi-trash"></i> {/* Çöp kutusu ikonu */}
+              <td className="align-middle text-center ">
+                <button
+                  className="btn btn-danger btn-sm rounded"
+                  onClick={() => handleDeleteDoctor(doctor.id)}
+                  disabled={!doctor.id}
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="Doktoru Sil"
+                >
+                  <i className="bi bi-trash"></i>
                 </button>
               </td>
             </tr>
           ))}
-          {/* Yeni doktor ekleme satırı */}
-          <tr>
-            <td>+</td>
+          <tr className="table-success">
+            <td className="fw-bold text-center align-middle">+</td>
             <td>
               <input
                 type="text"
@@ -70,25 +81,28 @@ const DoctorTable = ({ doctors, seniorities, handleNameChange, handleSeniorityCh
                 ))}
               </select>
             </td>
-            <td>
+            <td className="text-center align-middle">
               <button
                 className="btn btn-success btn-sm"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Yeni Doktor Ekle"
                 onClick={() => {
                   if (newDoctorName.trim() !== "" && newDoctorSeniority !== "") {
                     handleAddDoctor(newDoctorName, newDoctorSeniority);
-                    setNewDoctorName(""); // Temizle
+                    setNewDoctorName("");
                     setNewDoctorSeniority("");
                   }
                 }}
                 disabled={newDoctorName.trim() === "" || newDoctorSeniority === ""}
               >
-                <i className="bi bi-plus-lg"></i> {/* Ekle butonu için "+" ikonu */}
+                <i className="bi bi-plus-lg"></i>
               </button>
             </td>
           </tr>
         </tbody>
       </table>
-      <button className="btn btn-primary mt-3" onClick={handleSaveChanges} disabled={doctors.length === 0}>
+      <button className="btn btn-success w-100 shadow-md rounded-3" onClick={handleSaveChanges} disabled={doctors.length === 0}>
         Değişiklikleri Kaydet
       </button>
     </div>

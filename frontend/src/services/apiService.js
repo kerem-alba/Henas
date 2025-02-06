@@ -173,11 +173,13 @@ export const getShiftAreas = async () => {
     }
     const data = await response.json();
 
-    const formattedData = Object.entries(data).map(([area_name, details]) => ({
-      area_name,
-      id: details.id,
-      min_doctors_per_area: details.min_doctors_per_area,
-    }));
+    const formattedData = Object.entries(data)
+      .map(([area_name, details]) => ({
+        area_name,
+        id: details.id,
+        min_doctors_per_area: details.min_doctors_per_area,
+      }))
+      .sort((a, b) => a.id - b.id);
 
     return formattedData;
   } catch (error) {
@@ -186,14 +188,17 @@ export const getShiftAreas = async () => {
   }
 };
 
-export const addShiftArea = async (areaName) => {
+export const addShiftArea = async (areaName, minDoctors) => {
   try {
+    const payload = { area_name: areaName, min_doctors_per_area: Number(minDoctors) };
+    console.log("Gönderilen payload:", payload); // Konsolda kontrol et
+
     const response = await fetch(`${API_BASE_URL}/shift-areas`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ area_name: areaName }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -244,6 +249,7 @@ export const deleteShiftArea = async (areaId) => {
 };
 
 export const runAlgorithm = async (scheduleData) => {
+  console.log("Algoritma çalıştırılıyor:", scheduleData); // Konsolda kontrol et
   try {
     const response = await fetch(`${API_BASE_URL}/run-algorithm`, {
       method: "POST",

@@ -53,6 +53,7 @@ def run_algorithm_endpoint():
     try:
         data = request.json
 
+
         if not data:
             return jsonify({"error": "No data provided"}), 400
 
@@ -183,15 +184,13 @@ def list_shift_areas():
         return jsonify({"error": str(e)}), 500
     
 
-
-
 @app.route("/shift-areas", methods=["POST"])
 def add_shift_area_endpoint():
     try:
         data = request.json
 
-        if not data.get("area_name"):
-            return jsonify({"error": "area_name is required"}), 400
+        if not data.get("area_name") or not data.get("min_doctors_per_area"):
+            return jsonify({"error": "area_name and min_doctors_per_area are required"}), 400
 
         new_id = add_shift_area(data)
         return jsonify({"id": new_id, "message": "Shift area added successfully"}), 201
