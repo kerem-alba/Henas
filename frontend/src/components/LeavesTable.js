@@ -1,59 +1,54 @@
-import React, { useState } from "react";
+import React from "react";
 import "./styles.css";
 
-const LeavesTable = ({ doctorId, setMandatoryLeaves, setOptionalLeaves }) => {
+const LeavesTable = ({ doctorId, mandatoryLeaves, optionalLeaves, setMandatoryLeaves, setOptionalLeaves }) => {
   const days = Array.from({ length: 30 }, (_, i) => i + 1);
   const shifts = ["Gündüz", "Gece"];
 
-  const [selectedShifts, setSelectedShifts] = useState({});
+  // Hücrenin zorunlu/opsiyonel mi olduğunu bulalım
+  const getShiftStatus = (day, shiftType) => {
+    const shiftIndex = shifts.indexOf(shiftType);
+    if (mandatoryLeaves.some((m) => m[0] === doctorId && m[1] === day && m[2] === shiftIndex)) {
+      return "mandatory";
+    }
+    if (optionalLeaves.some((o) => o[0] === doctorId && o[1] === day && o[2] === shiftIndex)) {
+      return "optional";
+    }
+    return null;
+  };
 
+  // Tıklayınca parent’taki mandatory/optional dizilerini güncelleyelim
   const toggleShift = (day, shiftType) => {
-    setSelectedShifts((prev) => {
-      const current = prev[day]?.[shiftType];
-      const shiftIndex = shifts.indexOf(shiftType);
+    const shiftIndex = shifts.indexOf(shiftType);
 
-      let newMandatory = [];
-      let newOptional = [];
+    const isMandatory = mandatoryLeaves.some((m) => m[0] === doctorId && m[1] === day && m[2] === shiftIndex);
+    const isOptional = optionalLeaves.some((o) => o[0] === doctorId && o[1] === day && o[2] === shiftIndex);
 
-      setMandatoryLeaves((prevMandatory) => {
-        newMandatory = prevMandatory.filter((item) => !(item[0] === doctorId && item[1] === day && item[2] === shiftIndex));
-        return newMandatory;
-      });
+    // Mandatory -> Optional
+    if (isMandatory) {
+      setMandatoryLeaves((prev) => prev.filter((m) => !(m[0] === doctorId && m[1] === day && m[2] === shiftIndex)));
+      setOptionalLeaves((prev) => [...prev, [doctorId, day, shiftIndex]]);
+      return;
+    }
 
-      setOptionalLeaves((prevOptional) => {
-        newOptional = prevOptional.filter((item) => !(item[0] === doctorId && item[1] === day && item[2] === shiftIndex));
-        return newOptional;
-      });
+    // Optional -> Sil
+    if (isOptional) {
+      setOptionalLeaves((prev) => prev.filter((o) => !(o[0] === doctorId && o[1] === day && o[2] === shiftIndex)));
+      return;
+    }
 
-      if (current === "mandatory") {
-        setOptionalLeaves((prevOptional) => [...prevOptional, [doctorId, day, shiftIndex]]);
-        return {
-          ...prev,
-          [day]: { ...prev[day], [shiftType]: "optional" },
-        };
-      } else if (current === "optional") {
-        return {
-          ...prev,
-          [day]: { ...prev[day], [shiftType]: undefined },
-        };
-      } else {
-        setMandatoryLeaves((prevMandatory) => [...prevMandatory, [doctorId, day, shiftIndex]]);
-        return {
-          ...prev,
-          [day]: { ...prev[day], [shiftType]: "mandatory" },
-        };
-      }
-    });
+    // Boş -> Mandatory
+    setMandatoryLeaves((prev) => [...prev, [doctorId, day, shiftIndex]]);
   };
 
   return (
     <div className="table-container">
       <div className="info-box">
         <span>
-          <span className="info-square mandatory"></span> Zorunlu İzin
+          <span className="info-square mandatory" /> Zorunlu İzin
         </span>
         <span>
-          <span className="info-square optional"></span> Opsiyonel İzin
+          <span className="info-square optional" /> Opsiyonel İzin
         </span>
       </div>
 
@@ -71,13 +66,13 @@ const LeavesTable = ({ doctorId, setMandatoryLeaves, setOptionalLeaves }) => {
             <tr key={shiftType}>
               <td>{shiftType}</td>
               {days.map((day) => {
-                const shiftStatus = selectedShifts[day]?.[shiftType];
+                const status = getShiftStatus(day, shiftType);
                 return (
                   <td
                     key={`${doctorId}-${day}-${shiftType}`}
+                    className={status === "mandatory" ? "mandatory" : status === "optional" ? "optional" : ""}
                     onClick={() => toggleShift(day, shiftType)}
-                    className={shiftStatus === "mandatory" ? "mandatory" : shiftStatus === "optional" ? "optional" : ""}
-                  ></td>
+                  />
                 );
               })}
             </tr>

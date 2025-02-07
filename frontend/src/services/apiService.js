@@ -269,3 +269,80 @@ export const runAlgorithm = async (scheduleData) => {
     throw error;
   }
 };
+
+export const getScheduleData = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/schedule-data`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Nöbet verilerini getirirken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const addScheduleData = async (name, schedule) => {
+  try {
+    const requestData = { name, schedule };
+
+    const response = await fetch(`${API_BASE_URL}/schedule-data`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Nöbet listesi eklerken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const updateScheduleData = async (scheduleId, name, schedule) => {
+  try {
+    const requestData = { name, schedule };
+
+    const response = await fetch(`${API_BASE_URL}/schedule-data/${scheduleId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Nöbet listesini güncellerken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const deleteScheduleData = async (scheduleId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/schedule-data/${scheduleId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return { message: "Nöbet listesi başarıyla silindi." };
+  } catch (error) {
+    console.error("Nöbet listesi silerken hata oluştu:", error);
+    throw error;
+  }
+};

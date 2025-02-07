@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import React from "react";
 
 const Header = () => {
@@ -9,11 +10,19 @@ const Header = () => {
         </a>
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
-            <li className="nav-item">
-              <a className="nav-link" href="/schedules">
+            <div className="nav-item dropdown">
+              <a className="nav-link dropdown-toggle" id="nobetListeleriDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Nöbet Listeleri
               </a>
-            </li>
+              <div class="dropdown-menu" aria-labelledby="nobetListeleriDropdown">
+                <a class="dropdown-item" href="/schedule-data">
+                  Nöbet Listesi Verileri
+                </a>
+                <a class="dropdown-item" href="/create-schedule">
+                  Nöbet Listesi Oluştur
+                </a>
+              </div>
+            </div>
             <li className="nav-item">
               <a className="nav-link" href="/hospital">
                 Hastanem

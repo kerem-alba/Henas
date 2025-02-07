@@ -11,7 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<div>Anasayfa İçeriği</div>} />
         <Route path="/hospital" element={<Hospital />} />
-        <Route path="/schedules" element={<Schedules />} />
+        <Route path="/schedule-data" element={<Schedules />} />
       </Routes>
     </BrowserRouter>
   );

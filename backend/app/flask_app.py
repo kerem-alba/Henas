@@ -16,6 +16,11 @@ from services.database_service import (
     add_shift_area,
     update_all_shift_areas,
     delete_shift_area,
+    get_schedule_data,
+    update_schedule_data,
+    add_schedule_data,
+    delete_schedule_data,
+
 )
 from run_algorithm import run_algorithm
 import json
@@ -211,6 +216,54 @@ def delete_shift_area_endpoint(shift_area_id):
     try:
         delete_shift_area(shift_area_id)
         return jsonify({"message": "Shift area deleted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route("/schedule-data", methods=["GET"])
+def get_schedule_data_endpoint():
+    try:
+        schedules = get_schedule_data()
+        return jsonify(schedules), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/schedule-data", methods=["POST"])
+def add_schedule_data_endpoint():
+    try:
+        data = request.json
+
+        if not data.get("name") or not data.get("schedule"):
+            return jsonify({"error": "name and schedule (JSON) are required"}), 400
+
+        new_id = add_schedule_data(data["name"], data["schedule"])
+
+        return jsonify({"id": new_id, "message": "Schedule data added successfully"}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/schedule-data/<int:schedule_id>", methods=["PUT"])
+def update_schedule_data_endpoint(schedule_id):
+    try:
+        data = request.json
+
+        if not data.get("name") or not data.get("schedule"):
+            return jsonify({"error": "name and schedule (JSON) are required"}), 400
+
+        update_schedule_data(schedule_id, data["name"], data["schedule"])
+
+        return jsonify({"message": "Schedule data updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/schedule-data/<int:schedule_id>", methods=["DELETE"])
+def delete_schedule_data_endpoint(schedule_id):
+    try:
+        delete_schedule_data(schedule_id)
+        return jsonify({"message": "Schedule data deleted successfully"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

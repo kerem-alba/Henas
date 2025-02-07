@@ -1,22 +1,29 @@
 import React, { useState, useEffect } from "react";
 import LeavesTable from "./LeavesTable";
+import { addScheduleData } from "../services/apiService";
 
 const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
   const [localShiftCounts, setLocalShiftCounts] = useState({});
   const [mandatoryLeaves, setMandatoryLeaves] = useState([]);
   const [optionalLeaves, setOptionalLeaves] = useState([]);
   const [doctorCodes, setDoctorCodes] = useState({});
-  const [expandedRow, setExpandedRow] = useState(null); // Açılan satırı takip eden state
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [scheduleName, setScheduleName] = useState(""); // Yeni: Kullanıcıdan alınan kayıt ismi
 
   useEffect(() => {
     const assignedCodes = {};
     doctors.forEach((doctor, index) => {
-      assignedCodes[doctor.id] = String.fromCharCode(65 + index); // 'A', 'B', 'C', ...
+      assignedCodes[doctor.id] = String.fromCharCode(65 + index);
     });
     setDoctorCodes(assignedCodes);
   }, [doctors]);
 
-  const handleSaveScheduleData = () => {
+  const handleSaveScheduleData = async () => {
+    if (!scheduleName.trim()) {
+      alert("Lütfen bir nöbet listesi adı girin!");
+      return;
+    }
+
     const newScheduleData = doctors.map((doctor, index) => {
       const matchedSeniority = detailedSeniorities.find((s) => s.seniority_name === doctor.seniority_name);
       const shiftCount = localShiftCounts[index] || matchedSeniority?.max_shifts_per_month || 0;
@@ -24,7 +31,7 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
       const shift_area_ids = matchedSeniority.shift_area_ids;
 
       return {
-        code: doctorCodes[doctor.id], // Kodu dahil ettik
+        code: doctorCodes[doctor.id],
         name: doctor.name,
         seniority_id: seniority_id,
         shift_count: shiftCount,
@@ -34,11 +41,16 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
       };
     });
 
-    setScheduleData(newScheduleData);
-    console.log("Kaydedilen veri:", newScheduleData);
+    try {
+      await addScheduleData(scheduleName, newScheduleData);
+      alert("Nöbet listesi başarıyla kaydedildi!");
+      setScheduleName(""); // Kaydedildikten sonra input temizlensin
+    } catch (error) {
+      console.error("Nöbet listesi kaydedilirken hata oluştu:", error);
+      alert("Kaydetme işlemi başarısız oldu!");
+    }
   };
 
-  // Satır açma/kapatma fonksiyonu
   const toggleRow = (doctorId) => {
     setExpandedRow(expandedRow === doctorId ? null : doctorId);
   };
@@ -65,7 +77,6 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
 
             return (
               <React.Fragment key={doctor.id}>
-                {/* Ana Satır */}
                 <tr className="align-middle">
                   <td className="align-middle text-center">{index + 1}</td>
                   <td>
@@ -95,7 +106,6 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
                       }}
                     />
                   </td>
-                  {/* Açılır-Kapanır Butonu */}
                   <td className="text-center">
                     <button className="btn btn-sm btn-outline-light" onClick={() => toggleRow(doctor.id)}>
                       {expandedRow === doctor.id ? "İzinleri Gizle" : "İzinleri Göster"}
@@ -103,12 +113,17 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
                   </td>
                 </tr>
 
-                {/* Açılan İzinler Satırı */}
                 {expandedRow === doctor.id && (
                   <tr>
                     <td colSpan="7" className="p-0">
                       <div className="bg-light p-3">
-                        <LeavesTable doctorId={doctor.id} setMandatoryLeaves={setMandatoryLeaves} setOptionalLeaves={setOptionalLeaves} />
+                        <LeavesTable
+                          doctorId={doctor.id}
+                          mandatoryLeaves={mandatoryLeaves}
+                          optionalLeaves={optionalLeaves}
+                          setMandatoryLeaves={setMandatoryLeaves}
+                          setOptionalLeaves={setOptionalLeaves}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -118,9 +133,20 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
           })}
         </tbody>
       </table>
-      <button className="btn btn-success w-100 shadow-md rounded-3" onClick={handleSaveScheduleData}>
-        Kaydet
-      </button>
+
+      {/* Kaydetme Alanı */}
+      <div className="d-flex align-items-center gap-2 mt-3">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Nöbet listesi adı girin..."
+          value={scheduleName}
+          onChange={(e) => setScheduleName(e.target.value)}
+        />
+        <button className="btn btn-success shadow-md rounded-3" onClick={handleSaveScheduleData}>
+          Kaydet
+        </button>
+      </div>
     </div>
   );
 };

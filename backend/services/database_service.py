@@ -300,3 +300,93 @@ def delete_shift_area(area_id):
     conn.commit()
     cur.close()
     conn.close()
+
+def get_schedule_data():
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        cur.execute("SELECT id, schedule_data_name, schedule_data, created_at FROM schedule_data ORDER BY created_at DESC")
+        rows = cur.fetchall()
+
+        schedule_data = [
+            {
+                "id": row[0],
+                "name": row[1],  
+                "data": row[2], 
+                "created_at": row[3]
+            }
+            for row in rows
+        ]
+
+        cur.close()
+        conn.close()
+
+        return schedule_data
+
+    except Exception as e:
+        print("get_schedule_data fonksiyonunda hata:", e)
+        return []
+
+
+def add_schedule_data(name, schedule_json):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        cur.execute(
+            "INSERT INTO schedule_data (schedule_data_name, schedule_data) VALUES (%s, %s) RETURNING id",
+            (name, json.dumps(schedule_json)),
+        )
+        
+        schedule_id = cur.fetchone()[0]
+        conn.commit()
+
+        cur.close()
+        conn.close()
+
+        return {"message": "Nöbet listesi başarıyla kaydedildi.", "id": schedule_id}
+
+    except Exception as e:
+        print("save_schedule_data fonksiyonunda hata:", e)
+        return {"error": "Bir hata oluştu."}
+    
+def delete_schedule_data(schedule_id):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        cur.execute("DELETE FROM schedule_data WHERE id = %s", (schedule_id,))
+        conn.commit()
+
+        cur.close()
+        conn.close()
+
+        return {"message": "Nöbet listesi başarıyla silindi."}
+
+    except Exception as e:
+        print("delete_schedule_data fonksiyonunda hata:", e)
+        return {"error": "Silme işlemi sırasında bir hata oluştu."}
+
+
+def update_schedule_data(schedule_id, new_name, new_schedule_json):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        cur.execute(
+            "UPDATE schedule_data SET schedule_data_name = %s, schedule_data = %s WHERE id = %s",
+            (new_name, json.dumps(new_schedule_json), schedule_id)
+        )
+        
+        conn.commit()
+
+        cur.close()
+        conn.close()
+
+        return {"message": "Nöbet listesi başarıyla güncellendi."}
+
+    except Exception as e:
+        print("update_schedule_data fonksiyonunda hata:", e)
+        return {"error": "Güncelleme işlemi sırasında bir hata oluştu."}
+
