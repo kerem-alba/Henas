@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import { getAllScheduleData, getScheduleDataById, runAlgorithm } from "../services/apiService";
 import ScheduleResultTable from "../components/ScheduleResultTable";
 import ScheduleDoctorSummaryTable from "../components/ScheduleDoctorSummaryTable";
+import LogMessagesTable from "../components/LogMessagesTable";
 
 const CreateSchedule = () => {
   const [schedules, setSchedules] = useState([]);
   const [selectedScheduleId, setSelectedScheduleId] = useState(null);
   const [scheduleData, setScheduleData] = useState(null);
   const [algorithmResult, setAlgorithmResult] = useState(null);
-  const [selectedDoctorCode, setSelectedDoctorCode] = useState(null); // Seçili doktorun kodu
+  const [selectedDoctorCode, setSelectedDoctorCode] = useState(null);
+  const [scheduleId, setScheduleId] = useState(null);
 
   useEffect(() => {
     const fetchSchedules = async () => {
@@ -46,8 +48,12 @@ const CreateSchedule = () => {
     }
 
     try {
-      const result = await runAlgorithm(scheduleData);
-      setAlgorithmResult(result.schedule);
+      const { schedule, schedule_id } = await runAlgorithm(selectedScheduleId);
+      console.log("Gerçek schedule ID:", schedule_id);
+
+      setAlgorithmResult(schedule);
+      setScheduleId(schedule_id);
+
       alert("Nöbet listesi başarıyla oluşturuldu!");
     } catch (error) {
       console.error("Hata:", error);
@@ -81,9 +87,16 @@ const CreateSchedule = () => {
         </div>
       </div>
 
-      {/* Seçili doktorun kodunu ScheduleDoctorSummaryTable'a ve ScheduleResultTable'a gönder */}
       <ScheduleResultTable schedule={algorithmResult} selectedDoctorCode={selectedDoctorCode} />
-      <ScheduleDoctorSummaryTable scheduleData={scheduleData} algorithmResult={algorithmResult} setSelectedDoctorCode={setSelectedDoctorCode} />
+      <div className="row">
+        <div className="col-md-6">
+          <ScheduleDoctorSummaryTable scheduleData={scheduleData} algorithmResult={algorithmResult} setSelectedDoctorCode={setSelectedDoctorCode} />
+        </div>
+
+        <div className="col-md-6">
+          <LogMessagesTable schedule_id={scheduleId} />
+        </div>
+      </div>
     </div>
   );
 };

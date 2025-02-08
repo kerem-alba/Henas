@@ -1,10 +1,12 @@
 from models.doctor import Doctor
 from genetic_algorithm.genetic_algorithm import run_genetic_algorithm
 from hill_climbing_algorithm.hill_climbing_algorithm import run_hill_climbing
+from services.database_service import get_schedule_data_by_id
 import time
 
+def run_algorithm(schedule_data_id):
+    schedule_data = get_schedule_data_by_id(schedule_data_id)
 
-def run_algorithm(doctor_data):
     doctors = [
         Doctor(
             doc["code"],
@@ -15,13 +17,14 @@ def run_algorithm(doctor_data):
             doc["optional_leaves"],
             doc["mandatory_leaves"],
         )
-        for doc in doctor_data
+        for doc in schedule_data["data"]
     ]
 
     start_time = time.perf_counter()
 
     # run_genetic_algorithm(doctors)
-    population = run_hill_climbing(doctors)
+    population, schedule_id = run_hill_climbing(doctors, schedule_data_id)
+    print("schedule_id", schedule_id)
 
     end_time = time.perf_counter()
 
@@ -31,4 +34,4 @@ def run_algorithm(doctor_data):
         f"run_genetic_algorithm completed in {int(minutes)} minutes and {seconds:.2f} seconds"
     )
 
-    return population
+    return population, schedule_id

@@ -412,3 +412,133 @@ def update_schedule_data(schedule_id, new_name, new_schedule_json):
         print("update_schedule_data fonksiyonunda hata:", e)
         return {"error": "Güncelleme işlemi sırasında bir hata oluştu."}
 
+
+
+def get_schedule_by_id(schedule_id):
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT id, schedule_data_id, schedule, fitness_score, log_messages, created_at 
+        FROM schedules 
+        WHERE id = %s
+        """,
+        (schedule_id,),
+    )
+
+    result = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if result:
+        return {
+            "id": result[0],
+            "schedule_data_id": result[1],
+            "schedule": result[2],
+            "fitness_score": result[3],
+            "log_messages": result[4],
+            "created_at": result[5],
+        }
+    else:
+        return None
+
+
+def add_schedule(schedule_data_id, schedule):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+        
+        cur.execute(
+            """
+            INSERT INTO schedules (schedule_data_id, schedule)
+            VALUES (%s, %s)
+            RETURNING id
+            """,
+            (schedule_data_id, json.dumps(schedule))  
+        )
+        
+        schedule_id = cur.fetchone()[0]
+        conn.commit()
+
+        cur.close()
+        conn.close()
+
+        return schedule_id 
+
+    except Exception as e:
+        print("add_schedule fonksiyonunda hata:", e)
+        return None
+
+def add_fitness_score(schedule_id, fitness_score):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            UPDATE schedules
+            SET fitness_score = %s
+            WHERE id = %s
+            """,
+            (fitness_score, schedule_id)
+        )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        print("add_fitness_score fonksiyonunda hata:", e)
+
+import json
+import psycopg2
+
+import psycopg2
+
+import psycopg2
+
+def add_log_messages(schedule_id, log_messages):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        # Mevcut log_messages değerini al
+        cur.execute("SELECT log_messages FROM schedules WHERE id = %s", (schedule_id,))
+        result = cur.fetchone()
+
+        if result and result[0] is not None:
+            existing_logs = result[0] 
+        else:
+            existing_logs = []  # NULL yerine boş liste kullan
+
+        # Yeni mesajları ekle
+        updated_logs = existing_logs + log_messages
+
+        # Eğer liste boşsa, NULL yerine '{}' (boş array) ata
+        cur.execute(
+            """
+            UPDATE schedules
+            SET log_messages = %s
+            WHERE id = %s
+            """,
+            (updated_logs, schedule_id)
+        )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        print("add_log_messages fonksiyonunda hata:", e)
+
+
+def delete_schedule(schedule_id):
+    """Belirtilen ID'ye sahip schedule'ı siler."""
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM schedules WHERE id = %s", (schedule_id,))
+    conn.commit()
+    cur.close()
+    conn.close()

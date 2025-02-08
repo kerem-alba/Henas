@@ -21,7 +21,9 @@ from services.database_service import (
     update_schedule_data,
     add_schedule_data,
     delete_schedule_data,
-
+    get_schedule_by_id,
+    add_schedule,
+    delete_schedule,
 )
 from run_algorithm import run_algorithm
 import json
@@ -58,21 +60,20 @@ def get_detailed_doctors_endpoint():
 def run_algorithm_endpoint():
     try:
         data = request.get_json()
+        schedule_id = data.get("schedule_id")
 
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
+        if not schedule_id:
+            return jsonify({"error": "schedule_id is required"}), 400
 
-        if not isinstance(data, dict) or "data" not in data:
-            return jsonify({"error": "Invalid data format. Expected { data: [...] }"}), 400
+        population, generated_schedule_id = run_algorithm(schedule_id)
 
-        result = run_algorithm(data["data"])
-
-        return jsonify({"schedule": result}), 200
+        return jsonify({
+            "schedule": population,
+            "schedule_id": generated_schedule_id
+        }), 200
 
     except Exception as e:
-        print("Hata Ayrıntısı:", e)
         return jsonify({"error": str(e)}), 500
-
 
 
 
@@ -278,5 +279,29 @@ def delete_schedule_data_endpoint(schedule_id):
         delete_schedule_data(schedule_id)
         return jsonify({"message": "Schedule data deleted successfully"}), 200
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/schedules/<int:schedule_id>", methods=["GET"])
+def get_schedule_by_id_endpoint(schedule_id):
+    """Belirtilen ID'ye sahip schedule'ı getirir."""
+    try:
+        schedule = get_schedule_by_id(schedule_id)
+        if schedule:
+            return jsonify(schedule), 200
+        else:
+            return jsonify({"error": "Schedule not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+@app.route("/schedules/<int:schedule_id>", methods=["DELETE"])
+def delete_schedule_endpoint(schedule_id):
+    """Belirtilen ID'ye sahip schedule'ı siler."""
+    try:
+        delete_schedule(schedule_id)
+        return jsonify({"message": "Schedule deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
