@@ -1,53 +1,119 @@
 import React, { useState, useEffect } from "react";
 import LeavesTable from "./LeavesTable";
-import { addScheduleData } from "../services/apiService";
+import { addScheduleData, updateScheduleData, getAllScheduleData } from "../services/apiService";
 
-const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
+const ScheduleTable = ({
+  doctors,
+  detailedSeniorities,
+  scheduleData, // { id, name: '...', data: [ { code, name, shift_count, ... }, ... ] } veya null
+  setScheduleData,
+}) => {
+  const [scheduleName, setScheduleName] = useState("");
+  const [doctorCodes, setDoctorCodes] = useState({});
   const [localShiftCounts, setLocalShiftCounts] = useState({});
   const [mandatoryLeaves, setMandatoryLeaves] = useState([]);
   const [optionalLeaves, setOptionalLeaves] = useState([]);
-  const [doctorCodes, setDoctorCodes] = useState({});
   const [expandedRow, setExpandedRow] = useState(null);
-  const [scheduleName, setScheduleName] = useState(""); // Yeni: Kullanıcıdan alınan kayıt ismi
 
+  // Başlık belirleme (yeni mi, mevcut kayıt mı?)
+  const tableTitle = scheduleData ? scheduleData.name : "Yeni Nöbet Listesi Verisi Ekle";
+
+  // scheduleData her değiştiğinde tabloyu doldur veya sıfırla
   useEffect(() => {
-    const assignedCodes = {};
-    doctors.forEach((doctor, index) => {
-      assignedCodes[doctor.id] = String.fromCharCode(65 + index);
-    });
-    setDoctorCodes(assignedCodes);
-  }, [doctors]);
+    if (scheduleData && scheduleData.data) {
+      setScheduleName(scheduleData.name || "");
 
+      const newDoctorCodes = {};
+      const newLocalShiftCounts = {};
+      const newMandatory = [];
+      const newOptional = [];
+
+      scheduleData.data.forEach((schedDoc) => {
+        const matchedDoctor = doctors.find((d) => d.name === schedDoc.name);
+        if (matchedDoctor) {
+          newDoctorCodes[matchedDoctor.id] = schedDoc.code || "";
+          const docIndex = doctors.findIndex((d) => d.id === matchedDoctor.id);
+          newLocalShiftCounts[docIndex] = schedDoc.shift_count || 0;
+
+          if (schedDoc.mandatory_leaves) {
+            schedDoc.mandatory_leaves.forEach(([day, shiftIndex]) => {
+              newMandatory.push([matchedDoctor.id, day, shiftIndex]);
+            });
+          }
+          if (schedDoc.optional_leaves) {
+            schedDoc.optional_leaves.forEach(([day, shiftIndex]) => {
+              newOptional.push([matchedDoctor.id, day, shiftIndex]);
+            });
+          }
+        }
+      });
+
+      setDoctorCodes(newDoctorCodes);
+      setLocalShiftCounts(newLocalShiftCounts);
+      setMandatoryLeaves(newMandatory);
+      setOptionalLeaves(newOptional);
+    } else {
+      // Yeni bir liste oluşturuluyorsa otomatik kod ataması yap
+      setScheduleName("");
+      const autoCodes = {};
+      doctors.forEach((doctor, idx) => {
+        autoCodes[doctor.id] = String.fromCharCode(65 + idx);
+      });
+      setDoctorCodes(autoCodes);
+      setLocalShiftCounts({});
+      setMandatoryLeaves([]);
+      setOptionalLeaves([]);
+    }
+  }, [scheduleData, doctors]);
+
+  // Kaydet veya Güncelle
   const handleSaveScheduleData = async () => {
     if (!scheduleName.trim()) {
       alert("Lütfen bir nöbet listesi adı girin!");
       return;
     }
 
-    const newScheduleData = doctors.map((doctor, index) => {
-      const matchedSeniority = detailedSeniorities.find((s) => s.seniority_name === doctor.seniority_name);
-      const shiftCount = localShiftCounts[index] || matchedSeniority?.max_shifts_per_month || 0;
-      const seniority_id = matchedSeniority.id;
-      const shift_area_ids = matchedSeniority.shift_area_ids;
-
-      return {
-        code: doctorCodes[doctor.id],
-        name: doctor.name,
-        seniority_id: seniority_id,
-        shift_count: shiftCount,
-        shift_areas: shift_area_ids,
-        mandatory_leaves: mandatoryLeaves.filter((leave) => leave[0] === doctor.id).map((leave) => [leave[1], leave[2]]),
-        optional_leaves: optionalLeaves.filter((leave) => leave[0] === doctor.id).map((leave) => [leave[1], leave[2]]),
-      };
-    });
-
     try {
-      await addScheduleData(scheduleName, newScheduleData);
-      alert("Nöbet listesi başarıyla kaydedildi!");
-      setScheduleName(""); // Kaydedildikten sonra input temizlensin
+      // Veritabanındaki tüm nöbet listelerini getir
+      const existingSchedules = await getAllScheduleData(); // [{ id, name }, ...]
+
+      // Aynı isimde bir nöbet listesi var mı kontrol et
+      const isDuplicate = existingSchedules.some((s) => s.name.trim().toLowerCase() === scheduleName.trim().toLowerCase());
+
+      if (!scheduleData && isDuplicate) {
+        alert("Bu isimde bir nöbet listesi zaten mevcut! Lütfen farklı bir isim girin.");
+        return;
+      }
+
+      const newScheduleData = doctors.map((doctor, index) => {
+        const matchedSeniority = detailedSeniorities.find((s) => s.seniority_name === doctor.seniority_name);
+        const shiftCount = localShiftCounts[index] || matchedSeniority?.max_shifts_per_month || 0;
+
+        return {
+          code: doctorCodes[doctor.id] || "",
+          name: doctor.name,
+          seniority_id: matchedSeniority?.id,
+          shift_areas: matchedSeniority?.shift_area_ids,
+          shift_count: shiftCount,
+          mandatory_leaves: mandatoryLeaves.filter((leave) => leave[0] === doctor.id).map(([_, day, shiftIdx]) => [day, shiftIdx]),
+          optional_leaves: optionalLeaves.filter((leave) => leave[0] === doctor.id).map(([_, day, shiftIdx]) => [day, shiftIdx]),
+        };
+      });
+
+      if (scheduleData && scheduleData.id) {
+        // Güncelleme işlemi
+        await updateScheduleData(scheduleData.id, scheduleName, newScheduleData);
+        alert("Nöbet listesi başarıyla güncellendi!");
+      } else {
+        // Yeni kayıt ekleme işlemi
+        await addScheduleData(scheduleName, newScheduleData);
+        alert("Nöbet listesi başarıyla kaydedildi!");
+      }
+
+      setScheduleName("");
     } catch (error) {
-      console.error("Nöbet listesi kaydedilirken hata oluştu:", error);
-      alert("Kaydetme işlemi başarısız oldu!");
+      console.error("Nöbet listesi işlemi sırasında hata:", error);
+      alert("İşlem başarısız oldu!");
     }
   };
 
@@ -55,9 +121,14 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
     setExpandedRow(expandedRow === doctorId ? null : doctorId);
   };
 
+  if (!doctors.length) {
+    return <div className="mt-4 text-center">Listelemek için doktor verisi yok.</div>;
+  }
+
   return (
-    <div className="mt-4 w-75 mx-auto">
-      <h3 className="text-center bg-dark text-white p-3 shadow-md rounded-4">Nöbet Listesi</h3>
+    <div className="mt-4 mx-auto">
+      <h3 className="text-center bg-dark text-white p-3 shadow-md rounded-4">{tableTitle}</h3>
+
       <table className="table table-dark table-striped table-hover shadow-md" style={{ borderRadius: "15px", overflow: "hidden" }}>
         <thead className="thead-dark">
           <tr className="align-middle">
@@ -84,12 +155,12 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
                       type="text"
                       className="form-control bg-secondary text-white"
                       value={doctorCodes[doctor.id] || ""}
-                      onChange={(e) => {
+                      onChange={(e) =>
                         setDoctorCodes((prev) => ({
                           ...prev,
                           [doctor.id]: e.target.value.toUpperCase(),
-                        }));
-                      }}
+                        }))
+                      }
                     />
                   </td>
                   <td>{doctor.name}</td>
@@ -98,11 +169,14 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
                   <td>
                     <input
                       type="number"
-                      className="form-control"
-                      value={localShiftCounts[index] || matchedSeniority?.max_shifts_per_month || ""}
+                      className="form-control bg-secondary text-white"
+                      value={localShiftCounts[index] ?? matchedSeniority?.max_shifts_per_month ?? ""}
                       onChange={(e) => {
                         const newValue = Number(e.target.value);
-                        setLocalShiftCounts((prev) => ({ ...prev, [index]: newValue }));
+                        setLocalShiftCounts((prev) => ({
+                          ...prev,
+                          [index]: newValue,
+                        }));
                       }}
                     />
                   </td>
@@ -134,7 +208,7 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
         </tbody>
       </table>
 
-      {/* Kaydetme Alanı */}
+      {/* Kaydetme / Güncelleme Butonu */}
       <div className="d-flex align-items-center gap-2 mt-3">
         <input
           type="text"
@@ -143,8 +217,8 @@ const ScheduleTable = ({ doctors, detailedSeniorities, setScheduleData }) => {
           value={scheduleName}
           onChange={(e) => setScheduleName(e.target.value)}
         />
-        <button className="btn btn-success shadow-md rounded-3" onClick={handleSaveScheduleData}>
-          Kaydet
+        <button className={`btn shadow-md rounded-3 ${scheduleData ? "btn-warning" : "btn-success"}`} onClick={handleSaveScheduleData}>
+          {scheduleData ? "Güncelle" : "Kaydet"}
         </button>
       </div>
     </div>

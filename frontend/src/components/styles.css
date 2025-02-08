@@ -48,3 +48,10 @@
 .optional {
   background-color: yellow;
 }
+
+.selected-doctor {
+  border-radius: 20%;
+  border: 2px solid #ffc107;
+
+  background-color: rgba(255, 193, 7, 0.2);
+}

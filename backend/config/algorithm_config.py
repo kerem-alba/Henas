@@ -1,5 +1,5 @@
 # Algoritma Parametreleri
-max_generations = 20000
+max_generations = 20
 population_size = 1
 days = 30
 week_start_day = 1

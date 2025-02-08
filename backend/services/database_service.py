@@ -301,7 +301,29 @@ def delete_shift_area(area_id):
     cur.close()
     conn.close()
 
-def get_schedule_data():
+def get_schedule_data_by_id(schedule_id):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        cur.execute("SELECT schedule_data_name, schedule_data FROM schedule_data WHERE id = %s", (schedule_id,))
+        row = cur.fetchone()
+
+        schedule_data = {
+            "name": row[0],
+            "data": row[1]
+        } if row else {}
+
+        cur.close()
+        conn.close()
+
+        return schedule_data
+
+    except Exception as e:
+        print("get_schedule_data fonksiyonunda hata:", e)
+        return {}
+
+def get_all_schedule_data():
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()

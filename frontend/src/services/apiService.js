@@ -249,7 +249,7 @@ export const deleteShiftArea = async (areaId) => {
 };
 
 export const runAlgorithm = async (scheduleData) => {
-  console.log("Algoritma çalıştırılıyor:", scheduleData); // Konsolda kontrol et
+  console.log("Algoritma çalıştırılıyor:", scheduleData);
   try {
     const response = await fetch(`${API_BASE_URL}/run-algorithm`, {
       method: "POST",
@@ -263,14 +263,20 @@ export const runAlgorithm = async (scheduleData) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log("Algoritma sonucu:", result.schedule[0]);
+    console.log("Algoritma sonucu:>", result.schedule[0][0]);
+    console.log("Algoritma sonucu:>>", result.schedule[0][0][0]);
+    console.log("Algoritma sonucu:>>>", result.schedule[0][0][0][0]);
+
+    return result;
   } catch (error) {
     console.error("Algoritmayı çalıştırırken hata oluştu:", error);
     throw error;
   }
 };
 
-export const getScheduleData = async () => {
+export const getAllScheduleData = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/schedule-data`);
     if (!response.ok) {
@@ -279,6 +285,19 @@ export const getScheduleData = async () => {
     return await response.json();
   } catch (error) {
     console.error("Nöbet verilerini getirirken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const getScheduleDataById = async (scheduleId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/schedule-data/${scheduleId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Nöbet verisini getirirken hata oluştu:", error);
     throw error;
   }
 };

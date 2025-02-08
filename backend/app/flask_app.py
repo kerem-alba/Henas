@@ -16,7 +16,8 @@ from services.database_service import (
     add_shift_area,
     update_all_shift_areas,
     delete_shift_area,
-    get_schedule_data,
+    get_all_schedule_data,
+    get_schedule_data_by_id,
     update_schedule_data,
     add_schedule_data,
     delete_schedule_data,
@@ -56,18 +57,23 @@ def get_detailed_doctors_endpoint():
 @app.route("/run-algorithm", methods=["POST"])
 def run_algorithm_endpoint():
     try:
-        data = request.json
-
+        data = request.get_json()
 
         if not data:
             return jsonify({"error": "No data provided"}), 400
 
-        result = run_algorithm(data)
+        if not isinstance(data, dict) or "data" not in data:
+            return jsonify({"error": "Invalid data format. Expected { data: [...] }"}), 400
+
+        result = run_algorithm(data["data"])
 
         return jsonify({"schedule": result}), 200
 
     except Exception as e:
+        print("Hata Ayrıntısı:", e)
         return jsonify({"error": str(e)}), 500
+
+
 
 
 @app.route("/doctors", methods=["GET"])
@@ -219,13 +225,20 @@ def delete_shift_area_endpoint(shift_area_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+@app.route("/schedule-data/<int:schedule_id>", methods=["GET"])
+def get_schedule_data_endpoint(schedule_id):
+    try:
+        schedule = get_schedule_data_by_id(schedule_id)
+        return jsonify(schedule), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/schedule-data", methods=["GET"])
-def get_schedule_data_endpoint():
+def get_all_schedule_data_endpoint():
     try:
-        schedules = get_schedule_data()
-        return jsonify(schedules), 200
+        schedule_data = get_all_schedule_data()
+        return jsonify(schedule_data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
