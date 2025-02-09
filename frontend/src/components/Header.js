@@ -21,6 +21,9 @@ const Header = () => {
                 <a class="dropdown-item" href="/create-schedule">
                   Nöbet Listesi Oluştur
                 </a>
+                <a class="dropdown-item" href="/schedule-lists">
+                  Kayıtlı Nöbet Listeleri
+                </a>
               </div>
             </div>
             <li className="nav-item">

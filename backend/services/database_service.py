@@ -491,12 +491,6 @@ def add_fitness_score(schedule_id, fitness_score):
     except Exception as e:
         print("add_fitness_score fonksiyonunda hata:", e)
 
-import json
-import psycopg2
-
-import psycopg2
-
-import psycopg2
 
 def add_log_messages(schedule_id, log_messages):
     try:
@@ -542,3 +536,33 @@ def delete_schedule(schedule_id):
     conn.commit()
     cur.close()
     conn.close()
+
+def get_all_schedules():
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT s.id, s.schedule_data_id, sd.schedule_data_name, s.fitness_score
+        FROM schedules s
+        JOIN schedule_data sd ON s.schedule_data_id = sd.id
+        ORDER BY s.created_at DESC
+        """
+    )
+    
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    schedules = [
+        {
+            "id": row[0],
+            "schedule_data_id": row[1],
+            "schedule_data_name": row[2],
+            "fitness_score": row[3]
+        }
+        for row in rows
+    ]
+
+    return schedules
+

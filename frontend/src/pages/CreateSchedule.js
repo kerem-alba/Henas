@@ -51,7 +51,7 @@ const CreateSchedule = () => {
       const { schedule, schedule_id } = await runAlgorithm(selectedScheduleId);
       console.log("Gerçek schedule ID:", schedule_id);
 
-      setAlgorithmResult(schedule);
+      setAlgorithmResult(schedule[0][0]);
       setScheduleId(schedule_id);
 
       alert("Nöbet listesi başarıyla oluşturuldu!");

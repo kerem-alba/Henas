@@ -373,3 +373,16 @@ export const getScheduleById = async (scheduleId) => {
     throw error;
   }
 };
+
+export const getSchedules = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/schedules`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Nöbet listelerini getirirken hata oluştu:", error);
+    throw error;
+  }
+};

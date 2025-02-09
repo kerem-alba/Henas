@@ -5,12 +5,11 @@ const ScheduleResultTable = ({ schedule, selectedDoctorCode }) => {
     return <p className="text-center mt-4">Henüz algoritma çalıştırılmadı.</p>;
   }
 
-  const parsedSchedule = schedule[0][0] || [];
   const daysOfWeek = ["Pzt", "Sal", "Çrş", "Per", "Cum", "Cmt", "Paz"];
 
   const weeks = [];
-  for (let i = 0; i < parsedSchedule.length; i += 7) {
-    weeks.push(parsedSchedule.slice(i, i + 7));
+  for (let i = 0; i < schedule.length; i += 7) {
+    weeks.push(schedule.slice(i, i + 7));
   }
 
   return (

@@ -24,6 +24,7 @@ from services.database_service import (
     get_schedule_by_id,
     add_schedule,
     delete_schedule,
+    get_all_schedules,
 )
 from run_algorithm import run_algorithm
 import json
@@ -303,5 +304,13 @@ def delete_schedule_endpoint(schedule_id):
     try:
         delete_schedule(schedule_id)
         return jsonify({"message": "Schedule deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/schedules", methods=["GET"])
+def list_schedules_endpoint():
+    try:
+        schedules = get_all_schedules()
+        return jsonify(schedules)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

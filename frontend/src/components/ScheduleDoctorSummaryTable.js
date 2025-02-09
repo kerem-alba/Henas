@@ -23,8 +23,8 @@ const ScheduleDoctorSummaryTable = ({ scheduleData, algorithmResult, setSelected
               let dayShiftCount = 0;
               let nightShiftCount = 0;
 
-              if (algorithmResult && algorithmResult[0] && algorithmResult[0][0]) {
-                algorithmResult[0][0].forEach((day) => {
+              if (algorithmResult) {
+                algorithmResult.forEach((day) => {
                   if (day[0].includes(doctor.code)) dayShiftCount++;
                   if (day[1].includes(doctor.code)) nightShiftCount++;
                 });
