@@ -57,25 +57,25 @@ const ScheduleLists = () => {
     setFitnessScore(scheduleResult.fitness_score);
     setLogMessages(scheduleResult.log_messages);
     setSchedule_id(scheduleResult.id);
-    setScheduleData(scheduleDataResponse.data);
-
-    // Konsolda kontrol edebilirsin
-    console.log("Selected Schedule:", selectedSchedule);
-    console.log("Fetched scheduleResult:", scheduleResult);
-    console.log("Fetched scheduleDataResponse:", scheduleDataResponse);
+    setScheduleData(scheduleDataResponse);
   };
 
   return (
-    <div>
-      <h2>Saved Schedules</h2>
-      <select onChange={(e) => handleSelectSchedule(e.target.value)}>
-        <option value="">Select a schedule</option>
-        {savedSchedules.map((sch) => (
-          <option key={sch.id} value={sch.id}>
-            {`${sch.schedule_data_name} - ${sch.fitness_score}`}
+    <div className="container-fluid p-5 background-gradient full-screen">
+      <h2 className="fw-bold display-5 text-black ms-3 mb-4">Nöbet Listeleri</h2>
+      <div className="card bg-dark text-white p-3 rounded-4 w-50">
+        <h5>Kayıtlı Nöbet Listeleri</h5>
+        <select onChange={(e) => handleSelectSchedule(e.target.value)}>
+          <option value="" disabled>
+            Seçiniz...
           </option>
-        ))}
-      </select>
+          {savedSchedules.map((sch) => (
+            <option key={sch.id} value={sch.id}>
+              {`${sch.schedule_data_name} - ${sch.fitness_score}`}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Seçilen schedule varsa bileşenlere gönder */}
       {schedule && (

@@ -62,13 +62,13 @@ const CreateSchedule = () => {
   };
 
   return (
-    <div className="container-fluid p-5 background-gradient">
+    <div className="container-fluid p-5 background-gradient full-screen">
       <h2 className="fw-bold display-5 text-black ms-3 mb-4">Nöbet Listesi Oluştur</h2>
 
       <div className="row justify-content-center">
         <div className="col-md-4 col-12 mb-3">
           <div className="card bg-dark text-white p-3 rounded-4">
-            <h5>Kayıtlı Nöbet Listeleri</h5>
+            <h5>Kayıtlı Nöbet Listesi Verileri</h5>
             <select className="form-select mt-2" value={selectedScheduleId || ""} onChange={(e) => setSelectedScheduleId(e.target.value)}>
               <option value="" disabled>
                 Seçiniz...

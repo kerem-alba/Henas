@@ -13,7 +13,7 @@ from services.database_service import get_shift_areas, add_schedule, add_fitness
 import config.globals as g
 
 def run_hill_climbing(doctors, schedule_data_id):
-    g.shift_areas_data = get_shift_areas() 
+    g.shift_areas_data = get_shift_areas()
 
     population = create_initial_population(doctors)
     for generation in range(max_generations):
@@ -89,7 +89,3 @@ def sort_doctors_in_shifts(schedule):
         for shift in day:
             shift.sort()
     return schedule
-
-def get_min_doctors_per_area():
-
-    return 5

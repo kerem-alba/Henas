@@ -25,17 +25,21 @@ const LogMessagesTable = ({ schedule_id }) => {
     }
   }, [schedule_id]);
 
-  if (loading) return <p>Yükleniyor...</p>;
+  if (loading) return <> </>;
   if (error) return <p>Hata: {error}</p>;
 
   return (
-    <div>
-      <h3>Log Mesajları</h3>
-      <ul>
-        {logMessages.map((msg, index) => (
-          <li key={index}>{msg}</li>
-        ))}
-      </ul>
+    <div className="mt-4">
+      <h4 className="text-center bg-dark text-white p-2 rounded-3">Log</h4>
+      <div className="card shadow-sm bg-dark">
+        <ul className="list-group">
+          {logMessages.map((msg, index) => (
+            <li key={index} className="list-group-item bg-dark text-light border-secondary">
+              {msg}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

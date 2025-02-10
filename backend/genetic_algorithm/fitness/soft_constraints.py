@@ -37,8 +37,8 @@ def check_unequal_day_night_shifts(schedule, schedule_data_id, log):
             penalty += (shift_difference) * penalty_unequal_day_night_shifts
             if log:
                 log_text = (
-                    f"Doctor {doctor} has an unequal day-night shift distribution: "
-                    f"{shifts['day']} day shifts and {shifts['night']} night shifts."
+                    f"Dr. {doctor} : Gece-gündüz shiftleri eşit değil,  "
+                    f"{shifts['day']} gündüz, {shifts['night']} gece."
                 )
                 with open("generation_log.txt", "a") as log_file:
                     log_file.write(log_text + "\n")
@@ -69,7 +69,7 @@ def check_two_night_shifts(schedule,schedule_data_id, log):
                 penalty += penalty_two_night_shifts
                 if log:
                     log_text = (
-                        f"Doctor {doctor} assigned to 2 consecutive night shifts on Day {night_days[i] + 1} and Day {night_days[i + 1] + 1}"
+                        f"Dr. {doctor} : 2 gece üst üste nöbet - {night_days[i] + 1}. gün ve {night_days[i + 1] + 1}. gün."
                     )
                     with open("generation_log.txt", "a") as log_file:
                         log_file.write(log_text + "\n")
@@ -115,7 +115,7 @@ def check_weekend_free(schedule, doctors, schedule_data_id, log):
         if not has_free_weekend:
             penalty += penalty_weekend_free
             if log:
-                log_text = f"Doctor {doctor} has no completely free weekend."
+                log_text = f"Dr. {doctor}: Boş haftasonu yok."
                 with open("generation_log.txt", "a") as log_file:
                     log_file.write(log_text + "\n")
                 add_log_messages(schedule_data_id, [log_text])
@@ -180,20 +180,24 @@ def check_hierarchy_mismatch(schedule, doctors, schedule_data_id, log):
                     penalty += fill * penalty_hierarchy_mismatch
                     missing -= fill
                     if log:
-                        log_text = f"Filled {fill} missing doctors in Area {area} using secondary areas. Penalty added: {fill * penalty_hierarchy_mismatch}."
+                        area_name = next((name for name, data in g.shift_areas_data.items() if data["id"] == area), area)
+                        log_text = f"Nöbet alanındaki ({area_name}), {fill} eksik doktor ikinci tercihle dolduruldu."
                         with open("generation_log.txt", "a") as log_file:
                             log_file.write(log_text + "\n")
                         add_log_messages(schedule_data_id, [log_text])
+
 
 
                 # 5) Hâlâ eksik varsa hard_penalty ekle
                 if missing > 0:
                     penalty += missing * hard_penalty
                     if log:
-                        log_text = f"Hard penalty applied for {missing} remaining missing doctors in Area {area}. Penalty added: {missing * hard_penalty}."
+                        area_name = next((name for name, data in g.shift_areas_data.items() if data["id"] == area), area)
+                        log_text = f"⚠️ Nöbet alanında ({area_name}), {missing} doktor eksik"
                         with open("generation_log.txt", "a") as log_file:
                             log_file.write(log_text + "\n")
                         add_log_messages(schedule_data_id, [log_text])
+
 
     return penalty
 
@@ -214,7 +218,7 @@ def check_leave_days(schedule, doctors, schedule_data_id, log):
                 if [day_index + 1, shift_index] in doctor.optional_leaves:
                     penalty += penalty_shift_on_leave
                     if log:
-                        log_text = f"Day {day_index + 1}, Shift {shift_index}: Doctor {doctor_code} has an optional leave but assigned to a shift. Soft penalty: {penalty_shift_on_leave}."
+                        log_text = f"Dr. {doctor_code}: Opsiyonel izninde nöbet - {day_index + 1}. gün, {shift_index}. shift."
                         with open("generation_log.txt", "a") as log_file:
                             log_file.write(log_text + "\n")
                         add_log_messages(schedule_data_id, [log_text])
@@ -224,7 +228,7 @@ def check_leave_days(schedule, doctors, schedule_data_id, log):
                 if [day_index + 1, shift_index] in doctor.mandatory_leaves:
                     penalty += hard_penalty
                     if log:
-                        log_text = f"Day {day_index + 1}, Shift {shift_index}: Doctor {doctor_code} has a mandatory leave but assigned to a shift. Hard penalty: {hard_penalty}."
+                        log_text = f"Dr. {doctor_code}: Zorunlu izninde nöbet - {day_index + 1}. gün, {shift_index}. shift."
                         with open("generation_log.txt", "a") as log_file:
                             log_file.write(log_text + "\n")
                         add_log_messages(schedule_data_id, [log_text])
