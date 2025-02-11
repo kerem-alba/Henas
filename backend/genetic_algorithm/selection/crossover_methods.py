@@ -75,7 +75,6 @@ def apply_mapping(child, mapping, point1, point2, length):
                 visited = set()
                 while current in mapping:
                     if current in visited:
-
                         print("Cycle detected in PMX mapping!")
                         break
                     visited.add(current)

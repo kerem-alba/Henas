@@ -2,12 +2,7 @@ import React, { useState, useEffect } from "react";
 import LeavesTable from "./LeavesTable";
 import { addScheduleData, updateScheduleData, getAllScheduleData } from "../services/apiService";
 
-const ScheduleTable = ({
-  doctors,
-  detailedSeniorities,
-  scheduleData, // { id, name: '...', data: [ { code, name, shift_count, ... }, ... ] } veya null
-  setScheduleData,
-}) => {
+const ScheduleTable = ({ doctors, detailedSeniorities, scheduleData, firstDay, daysInMonth }) => {
   const [scheduleName, setScheduleName] = useState("");
   const [doctorCodes, setDoctorCodes] = useState({});
   const [localShiftCounts, setLocalShiftCounts] = useState({});
@@ -15,10 +10,8 @@ const ScheduleTable = ({
   const [optionalLeaves, setOptionalLeaves] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
 
-  // Başlık belirleme (yeni mi, mevcut kayıt mı?)
   const tableTitle = scheduleData ? scheduleData.name : "Yeni Nöbet Listesi Verisi Ekle";
 
-  // scheduleData her değiştiğinde tabloyu doldur veya sıfırla
   useEffect(() => {
     if (scheduleData && scheduleData.data) {
       setScheduleName(scheduleData.name || "");
@@ -74,10 +67,7 @@ const ScheduleTable = ({
     }
 
     try {
-      // Veritabanındaki tüm nöbet listelerini getir
-      const existingSchedules = await getAllScheduleData(); // [{ id, name }, ...]
-
-      // Aynı isimde bir nöbet listesi var mı kontrol et
+      const existingSchedules = await getAllScheduleData();
       const isDuplicate = existingSchedules.some((s) => s.name.trim().toLowerCase() === scheduleName.trim().toLowerCase());
 
       if (!scheduleData && isDuplicate) {
@@ -101,12 +91,10 @@ const ScheduleTable = ({
       });
 
       if (scheduleData && scheduleData.id) {
-        // Güncelleme işlemi
         await updateScheduleData(scheduleData.id, scheduleName, newScheduleData);
         alert("Nöbet listesi başarıyla güncellendi!");
       } else {
-        // Yeni kayıt ekleme işlemi
-        await addScheduleData(scheduleName, newScheduleData);
+        await addScheduleData(scheduleName, newScheduleData, firstDay, daysInMonth);
         alert("Nöbet listesi başarıyla kaydedildi!");
       }
 

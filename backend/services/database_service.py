@@ -306,12 +306,19 @@ def get_schedule_data_by_id(schedule_id):
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
 
-        cur.execute("SELECT schedule_data_name, schedule_data FROM schedule_data WHERE id = %s", (schedule_id,))
+        cur.execute("""
+            SELECT schedule_data_name, schedule_data, first_day, days_in_month 
+            FROM schedule_data 
+            WHERE id = %s
+        """, (schedule_id,))
+        
         row = cur.fetchone()
 
         schedule_data = {
             "name": row[0],
-            "data": row[1]
+            "data": row[1],
+            "first_day": row[2],
+            "days_in_month": row[3]
         } if row else {}
 
         cur.close()
@@ -320,8 +327,9 @@ def get_schedule_data_by_id(schedule_id):
         return schedule_data
 
     except Exception as e:
-        print("get_schedule_data fonksiyonunda hata:", e)
+        print("get_schedule_data_by_id fonksiyonunda hata:", e)
         return {}
+
 
 def get_all_schedule_data():
     try:
@@ -351,17 +359,21 @@ def get_all_schedule_data():
         return []
 
 
-def add_schedule_data(name, schedule_json):
+def add_schedule_data(name, schedule_json, first_day, days_in_month):
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
 
         cur.execute(
-            "INSERT INTO schedule_data (schedule_data_name, schedule_data) VALUES (%s, %s) RETURNING id",
-            (name, json.dumps(schedule_json)),
+            """
+            INSERT INTO schedule_data (schedule_data_name, schedule_data, first_day, days_in_month) 
+            VALUES (%s, %s, %s, %s) 
+            RETURNING id
+            """,
+            (name, json.dumps(schedule_json), first_day, days_in_month)
         )
         
-        schedule_id = cur.fetchone()[0]
+        schedule_id = cur.fetchone()[0]  # ID'yi al
         conn.commit()
 
         cur.close()
@@ -370,8 +382,9 @@ def add_schedule_data(name, schedule_json):
         return {"message": "Nöbet listesi başarıyla kaydedildi.", "id": schedule_id}
 
     except Exception as e:
-        print("save_schedule_data fonksiyonunda hata:", e)
-        return {"error": "Bir hata oluştu."}
+        print("add_schedule_data fonksiyonunda hata:", e)
+        return {"error": str(e)}
+
     
 def delete_schedule_data(schedule_id):
     try:

@@ -1,15 +1,50 @@
 import React from "react";
 
-const ScheduleResultTable = ({ schedule, selectedDoctorCode }) => {
+const ScheduleResultTable = ({ schedule, selectedDoctorCode, firstDay }) => {
+  console.log("firstDay:", firstDay);
   if (!schedule || schedule.length === 0) {
     return <p className="text-center mt-4">Henüz algoritma çalıştırılmadı.</p>;
   }
 
-  const daysOfWeek = ["Pzt", "Sal", "Çrş", "Per", "Cum", "Cmt", "Paz"];
+  const daysOfWeek = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
 
+  // firstDay string olarak geliyor, bunu dizideki index değerine çevirelim.
+  let firstDayIndex = daysOfWeek.indexOf(firstDay);
+
+  // Eğer firstDayIndex -1 dönerse (geçersiz değer), varsayılan olarak Pazartesi seç
+  if (firstDayIndex === -1) {
+    console.error(`Geçersiz gün adı: ${firstDay}, varsayılan olarak "Pzt" alındı.`);
+    firstDayIndex = 0;
+  }
+
+  const totalDays = schedule.length; // Ay içindeki toplam gün sayısı
   const weeks = [];
-  for (let i = 0; i < schedule.length; i += 7) {
-    weeks.push(schedule.slice(i, i + 7));
+  let dayCounter = 1;
+
+  // İlk haftayı oluştururken firstDayIndex kadar boşluk ekleyelim
+  let firstWeek = new Array(firstDayIndex).fill(null); // İlk gün öncesini boş yap
+  for (let i = firstDayIndex; i < 7; i++) {
+    if (dayCounter <= totalDays) {
+      firstWeek.push(schedule[dayCounter - 1]);
+      dayCounter++;
+    } else {
+      firstWeek.push(null);
+    }
+  }
+  weeks.push(firstWeek);
+
+  // Sonraki haftaları 7'şer 7'şer dolduralım
+  while (dayCounter <= totalDays) {
+    let week = [];
+    for (let i = 0; i < 7; i++) {
+      if (dayCounter <= totalDays) {
+        week.push(schedule[dayCounter - 1]);
+        dayCounter++;
+      } else {
+        week.push(null);
+      }
+    }
+    weeks.push(week);
   }
 
   return (
@@ -29,18 +64,24 @@ const ScheduleResultTable = ({ schedule, selectedDoctorCode }) => {
             <tr key={weekIndex}>
               {week.map((shift, dayIndex) => (
                 <td key={dayIndex}>
-                  <strong className="d-flex justify-content-center bg-warning text-dark mb-1">{weekIndex * 7 + dayIndex + 1}. Gün</strong>
-                  {shift[0].map((code, index) => (
-                    <span key={index} className={code === selectedDoctorCode ? "selected-doctor" : ""}>
-                      {code}{" "}
-                    </span>
-                  ))}
-                  <br />
-                  {shift[1].map((code, index) => (
-                    <span key={index} className={code === selectedDoctorCode ? "selected-doctor" : ""}>
-                      {code}{" "}
-                    </span>
-                  ))}
+                  {shift ? (
+                    <>
+                      <strong className="d-flex justify-content-center bg-warning text-dark mb-1">
+                        {weekIndex * 7 + dayIndex - firstDayIndex + 1}. Gün
+                      </strong>
+                      {shift[0].map((code, index) => (
+                        <span key={index} className={code === selectedDoctorCode ? "selected-doctor" : ""}>
+                          {code}{" "}
+                        </span>
+                      ))}
+                      <br />
+                      {shift[1].map((code, index) => (
+                        <span key={index} className={code === selectedDoctorCode ? "selected-doctor" : ""}>
+                          {code}{" "}
+                        </span>
+                      ))}
+                    </>
+                  ) : null}
                 </td>
               ))}
             </tr>

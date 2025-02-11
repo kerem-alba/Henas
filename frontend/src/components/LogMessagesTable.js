@@ -31,7 +31,7 @@ const LogMessagesTable = ({ schedule_id }) => {
   return (
     <div className="mt-4">
       <h4 className="text-center bg-dark text-white p-2 rounded-3">Log</h4>
-      <div className="card shadow-sm bg-dark">
+      <div className="card shadow-sm bg-dark" style={{ maxHeight: "950px", overflowY: "auto" }}>
         <ul className="list-group">
           {logMessages.map((msg, index) => (
             <li key={index} className="list-group-item bg-dark text-light border-secondary">

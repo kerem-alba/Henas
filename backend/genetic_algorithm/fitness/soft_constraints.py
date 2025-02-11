@@ -3,7 +3,6 @@ from config.algorithm_config import (
     penalty_two_night_shifts,
     penalty_weekend_free,
     penalty_hierarchy_mismatch,
-    week_start_day,
     penalty_shift_on_leave,
     hard_penalty,
 )
@@ -37,7 +36,7 @@ def check_unequal_day_night_shifts(schedule, schedule_data_id, log):
             penalty += (shift_difference) * penalty_unequal_day_night_shifts
             if log:
                 log_text = (
-                    f"Dr. {doctor} : Gece-gündüz shiftleri eşit değil,  "
+                    f"Dr. {doctor} : Gece-gündüz shiftleri eşit değil -  "
                     f"{shifts['day']} gündüz, {shifts['night']} gece."
                 )
                 with open("generation_log.txt", "a") as log_file:
@@ -93,8 +92,8 @@ def check_weekend_free(schedule, doctors, schedule_data_id, log):
     # Haftanın günlerini düzenle
     total_days = len(schedule)
     weekend_days = [
-        (week_start_day + 5) % 7,
-        (week_start_day + 6) % 7,
+        (g.week_start_day + 5) % 7,
+        (g.week_start_day + 6) % 7,
     ]  # Cumartesi ve Pazar günleri
 
     # Her doktorun hafta sonu boş olup olmadığını kontrol et
@@ -127,77 +126,95 @@ def check_hierarchy_mismatch(schedule, doctors, schedule_data_id, log):
     penalty = 0
     doctor_dict = {doctor.code: doctor for doctor in doctors}
 
+    # Alan bazında minimum doktor ihtiyacı
     min_doctors_per_area = {
-        info["id"]: info["min_doctors_per_area"] for area, info in g.shift_areas_data.items()
+        info["id"]: info["min_doctors_per_area"] for _, info in g.shift_areas_data.items()
     }
 
     for day_index, day in enumerate(schedule):
         for shift_index, shift in enumerate(day):
+            # Her area için sayıcılar
+            primary_counts = {area_id: 0 for area_id in min_doctors_per_area.keys()}
+            secondary_counts = {area_id: 0 for area_id in min_doctors_per_area.keys()}
+            tertiary_counts = {area_id: 0 for area_id in min_doctors_per_area.keys()}
 
-            # 1) Birincil alana göre alan sayıları
-            primary_counts = {area: 0 for area in min_doctors_per_area.keys()}
-            # 2) İkincil alanda kaç doktor bu alana kayabilir?
-            secondary_counts = {area: 0 for area in min_doctors_per_area.keys()}
-
-            # Doktorları inceleyip sayıları doldur
+            # Doktorları say
             for doctor_code in shift:
                 doctor = doctor_dict.get(doctor_code)
                 if not doctor or not doctor.shift_areas:
                     continue
-                
-                # Birincil alan
-                primary_area = doctor.shift_areas[0]
-                if primary_area in primary_counts:
-                    primary_counts[primary_area] += 1
 
-                # Eğer ikincil alanı varsa, oraya kayma potansiyelini de say
-                if len(doctor.shift_areas) > 1:
+                # 1) Birincil alan
+                if len(doctor.shift_areas) >= 1:
+                    primary_area = doctor.shift_areas[0]
+                    if primary_area in primary_counts:
+                        primary_counts[primary_area] += 1
+
+                # 2) İkincil alan
+                if len(doctor.shift_areas) >= 2:
                     secondary_area = doctor.shift_areas[1]
                     if secondary_area in secondary_counts:
                         secondary_counts[secondary_area] += 1
 
-            # 3) Eksikleri hesapla
-            for area, required_count in min_doctors_per_area.items():
-                current_count = primary_counts.get(area, 0)
+                # 3) Üçüncül alan
+                if len(doctor.shift_areas) >= 3:
+                    tertiary_area = doctor.shift_areas[2]
+                    if tertiary_area in tertiary_counts:
+                        tertiary_counts[tertiary_area] += 1
+
+            # Eksikleri kapatmaya çalış
+            for area_id, required_count in min_doctors_per_area.items():
+                current_count = primary_counts.get(area_id, 0)
                 missing = required_count - current_count
 
-                # Eğer eksik yoksa devam et
                 if missing <= 0:
                     continue
 
+                # Log için alan ismini bul
+                area_name = next(
+                    (name for name, data in g.shift_areas_data.items() if data["id"] == area_id),
+                    area_id
+                )
+
+                # Eksik varsa log
                 if log:
+                    log_text = f"{area_name} alanında {missing} doktor eksik - {day_index + 1}. gün {shift_index + 1}. shift"
                     with open("generation_log.txt", "a") as log_file:
-                        log_file.write(
-                            f"Day {day_index + 1}, Shift {shift_index + 1}: Missing {missing} doctors in Area {area}.\n"
-                        )
+                        log_file.write(log_text + "\n")
 
-                # 4) Eksik alanı, ikincil alan ile kapatmaya çalış
-                can_fill = secondary_counts.get(area, 0)
-
-                # İkincil alan ile karşılanabilecek kısım
-                fill = min(missing, can_fill)
-                if fill > 0:
-                    penalty += fill * penalty_hierarchy_mismatch
-                    missing -= fill
+                # İkincil alan
+                can_fill_secondary = secondary_counts.get(area_id, 0)
+                fill_secondary = min(missing, can_fill_secondary)
+                if fill_secondary > 0:
+                    penalty += fill_secondary * penalty_hierarchy_mismatch
+                    missing -= fill_secondary
                     if log:
-                        area_name = next((name for name, data in g.shift_areas_data.items() if data["id"] == area), area)
-                        log_text = f"Nöbet alanındaki ({area_name}), {fill} eksik doktor ikinci tercihle dolduruldu."
+                        log_text = f"{area_name} alanında {fill_secondary} doktor ikincil tercihinde çalışacak. - {day_index + 1}. gün {shift_index + 1}. shift"
                         with open("generation_log.txt", "a") as log_file:
                             log_file.write(log_text + "\n")
                         add_log_messages(schedule_data_id, [log_text])
 
+                # Üçüncül alan
+                if missing > 0:
+                    can_fill_tertiary = tertiary_counts.get(area_id, 0)
+                    fill_tertiary = min(missing, can_fill_tertiary)
+                    if fill_tertiary > 0:
+                        penalty += fill_tertiary * 1.2 * penalty_hierarchy_mismatch
+                        missing -= fill_tertiary
+                        if log:
+                            log_text = f"{area_name} alanında {fill_tertiary} doktor üçüncü tercihinde çalışacak. - {day_index + 1}. gün {shift_index + 1}. shift"
+                            with open("generation_log.txt", "a") as log_file:
+                                log_file.write(log_text + "\n")
+                            add_log_messages(schedule_data_id, [log_text])
 
-
-                # 5) Hâlâ eksik varsa hard_penalty ekle
+                # Hâlâ eksik varsa hard_penalty
                 if missing > 0:
                     penalty += missing * hard_penalty
                     if log:
-                        area_name = next((name for name, data in g.shift_areas_data.items() if data["id"] == area), area)
-                        log_text = f"⚠️ Nöbet alanında ({area_name}), {missing} doktor eksik"
+                        log_text = f"[!] {area_name} alanında {missing} doktor eksik, yeri doldurulamadı- {day_index + 1}. gün {shift_index + 1}. shift"
                         with open("generation_log.txt", "a") as log_file:
                             log_file.write(log_text + "\n")
                         add_log_messages(schedule_data_id, [log_text])
-
 
     return penalty
 
@@ -223,12 +240,11 @@ def check_leave_days(schedule, doctors, schedule_data_id, log):
                             log_file.write(log_text + "\n")
                         add_log_messages(schedule_data_id, [log_text])
 
-
                 # Mandatory izin ihlali
                 if [day_index + 1, shift_index] in doctor.mandatory_leaves:
                     penalty += hard_penalty
                     if log:
-                        log_text = f"Dr. {doctor_code}: Zorunlu izninde nöbet - {day_index + 1}. gün, {shift_index}. shift."
+                        log_text = f"[!] Dr. {doctor_code}: Zorunlu izninde nöbet - {day_index + 1}. gün, {shift_index}. shift."
                         with open("generation_log.txt", "a") as log_file:
                             log_file.write(log_text + "\n")
                         add_log_messages(schedule_data_id, [log_text])

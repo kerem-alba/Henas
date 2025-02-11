@@ -6,17 +6,13 @@ import ScheduleTable from "../components/ScheduleTable";
 const ScheduleData = () => {
   const [doctors, setDoctors] = useState([]);
   const [detailedSeniorities, setDetailedSeniorities] = useState([]);
-
-  // Kayıtlı schedule listesi
-  const [schedules, setSchedules] = useState([]); // [{id, name}, ...]
+  const [schedules, setSchedules] = useState([]);
   const [selectedScheduleId, setSelectedScheduleId] = useState(null);
-
-  // Seçili schedule verisi (ScheduleTable'a aktarılacak)
   const [scheduleData, setScheduleData] = useState(null);
-
   const [isNewScheduleActive, setIsNewScheduleActive] = useState(false);
+  const [month, setMonth] = useState("");
+  const [year, setYear] = useState("");
 
-  // Doktor ve kıdem verilerini getir
   useEffect(() => {
     const fetchBaseData = async () => {
       try {
@@ -30,11 +26,10 @@ const ScheduleData = () => {
     fetchBaseData();
   }, []);
 
-  // Kayıtlı schedule listesini getir
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
-        const allSchedules = await getAllScheduleData(); // [{id, name}, ...]
+        const allSchedules = await getAllScheduleData();
         setSchedules(allSchedules);
       } catch (error) {
         console.error("Schedule listesi alınırken hata:", error);
@@ -43,7 +38,6 @@ const ScheduleData = () => {
     fetchSchedules();
   }, []);
 
-  // Seçili schedule değiştiğinde verisini çek
   useEffect(() => {
     const fetchSelectedSchedule = async () => {
       if (!selectedScheduleId) return;
@@ -59,10 +53,9 @@ const ScheduleData = () => {
   }, [selectedScheduleId]);
 
   const handleNewSchedule = () => {
-    // Yeni liste için tüm veriyi sıfırla
     setSelectedScheduleId(null);
     setScheduleData(null);
-    setIsNewScheduleActive(true);
+    setIsNewScheduleActive(!isNewScheduleActive);
   };
 
   const handleDeleteSchedule = async () => {
@@ -77,8 +70,6 @@ const ScheduleData = () => {
     try {
       await deleteScheduleData(selectedScheduleId);
       alert("Nöbet listesi başarıyla silindi!");
-
-      // Güncellenmiş listeyi çek
       const updatedSchedules = await getAllScheduleData();
       setSchedules(updatedSchedules);
       setSelectedScheduleId(null);
@@ -89,6 +80,17 @@ const ScheduleData = () => {
     }
   };
 
+  const calculateMonthInfo = () => {
+    if (!month || !year) return { firstDay: "", daysInMonth: "" };
+
+    const firstDay = new Date(year, month - 1, 1).toLocaleDateString("tr-TR", { weekday: "long" });
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    return { firstDay, daysInMonth };
+  };
+
+  const { firstDay, daysInMonth } = calculateMonthInfo();
+
   return (
     <div className="container-fluid p-5 background-gradient">
       <h2 className="fw-bold display-5 text-black ms-3 mb-4">Nöbet Listesi Verileri</h2>
@@ -96,9 +98,9 @@ const ScheduleData = () => {
       <div className="row justify-content-center">
         <div className="col-lg-3 col-12 mb-3" style={{ maxWidth: "350px" }}>
           <div className="card bg-dark text-white p-3 mb-3 mt-4 rounded-4">
-            <h5>Kayıtlı Nöbet Listeleri</h5>
+            <h5>Nöbet Listesi Verileri</h5>
             <select className="form-select mt-2" value={selectedScheduleId || ""} onChange={(e) => setSelectedScheduleId(e.target.value)}>
-              <option value="" disabled={true}>
+              <option value="" disabled>
                 Seçiniz...
               </option>
               {schedules.map((s) => (
@@ -112,18 +114,39 @@ const ScheduleData = () => {
               Yeni Nöbet Listesi Verisi Ekle
             </button>
 
-            <button
-              className="btn btn-danger mt-2 w-100"
-              onClick={handleDeleteSchedule}
-              disabled={!selectedScheduleId} // Seçili bir liste yoksa buton devre dışı
-            >
-              Seçili Nöbet Listesini Sil
+            {isNewScheduleActive && (
+              <div className="mt-3 p-3 bg-secondary rounded-3">
+                <label className="form-label">Ay Seçin</label>
+                <select className="form-select" value={month} onChange={(e) => setMonth(e.target.value)}>
+                  <option value="" disabled>
+                    Seçiniz...
+                  </option>
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {new Date(0, i).toLocaleDateString("tr-TR", { month: "long" })}
+                    </option>
+                  ))}
+                </select>
+
+                <label className="form-label mt-2">Yıl Seçin</label>
+                <input type="number" className="form-control" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2024" min="2024" />
+              </div>
+            )}
+
+            <button className="btn btn-danger mt-3 w-100" onClick={handleDeleteSchedule} disabled={!selectedScheduleId}>
+              Seçili Nöbet Listesi Verisini Sil
             </button>
           </div>
         </div>
 
         <div className="col-lg-9 col-12">
-          <ScheduleTable doctors={doctors} detailedSeniorities={detailedSeniorities} scheduleData={scheduleData} setScheduleData={setScheduleData} />
+          <ScheduleTable
+            doctors={doctors}
+            detailedSeniorities={detailedSeniorities}
+            scheduleData={scheduleData}
+            firstDay={firstDay}
+            daysInMonth={daysInMonth}
+          />
         </div>
       </div>
     </div>

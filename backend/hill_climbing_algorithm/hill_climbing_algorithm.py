@@ -9,13 +9,17 @@ from config.algorithm_config import (
     day_swap_rate,
 )
 from genetic_algorithm.mutation.mutation_methods import mutate_schedule
-from services.database_service import get_shift_areas, add_schedule, add_fitness_score
+from services.database_service import get_shift_areas, add_schedule, add_fitness_score, get_schedule_data_by_id
 import config.globals as g
 
 def run_hill_climbing(doctors, schedule_data_id):
     g.shift_areas_data = get_shift_areas()
+    schedule_data = get_schedule_data_by_id(schedule_data_id)
+    daysInMonth = schedule_data.get("days_in_month")
+    first_day = schedule_data.get("first_day", "Pazartesi") 
+    g.week_start_day = g.week_days_map.get(first_day, 1)  
 
-    population = create_initial_population(doctors)
+    population = create_initial_population(doctors, daysInMonth)
     for generation in range(max_generations):
         doc_rate, slide_rate, shift_rate, day_rate = get_swap_rates(generation)
 
@@ -26,7 +30,6 @@ def run_hill_climbing(doctors, schedule_data_id):
                 copy.deepcopy(original), doc_rate, slide_rate, shift_rate, day_rate
             )
             mutated_fitness = calculate_fitness(mutated, doctors, schedule_data_id=None, log=False)
-
             if mutated_fitness > original_fitness:
                 population[idx] = mutated
                 with open("generation_log.txt", "a") as log_file:
@@ -54,16 +57,12 @@ def process_population(population, doctors, schedule_data_id):
         population[idx] = sort_doctors_in_shifts(population[idx])
         # Schedule'ı veritabanına kaydet
         schedule_id = add_schedule(schedule_data_id, population[idx])
-
         # Fitness puanını hesapla
         fitness_score = calculate_fitness(population[idx], doctors, schedule_id, log=True)
-
         add_fitness_score(schedule_id, fitness_score)
-
         # Schedule ve fitness puanını birlikte sakla
         processed_population.append((population[idx], fitness_score))
         
-
     # Log dosyasına yaz
     with open("generation_log.txt", "a") as log_file:
         for idx, (schedule, fitness_score) in enumerate(processed_population):

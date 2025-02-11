@@ -232,9 +232,15 @@ def delete_shift_area_endpoint(shift_area_id):
 def get_schedule_data_endpoint(schedule_id):
     try:
         schedule = get_schedule_data_by_id(schedule_id)
+
+        if not schedule:
+            return jsonify({"error": "Schedule not found"}), 404
+
         return jsonify(schedule), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/schedule-data", methods=["GET"])
 def get_all_schedule_data_endpoint():
@@ -249,11 +255,15 @@ def add_schedule_data_endpoint():
     try:
         data = request.json
 
-        if not data.get("name") or not data.get("schedule"):
+        if not data.get("name") or not data.get("schedule") or not data.get("first_day") or not data.get("days_in_month"):
             return jsonify({"error": "name and schedule (JSON) are required"}), 400
 
-        new_id = add_schedule_data(data["name"], data["schedule"])
-
+        new_id = add_schedule_data(
+            data["name"], 
+            data["schedule"], 
+            data["first_day"], 
+            data["days_in_month"]
+        )
         return jsonify({"id": new_id, "message": "Schedule data added successfully"}), 201
 
     except Exception as e:

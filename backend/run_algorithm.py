@@ -24,7 +24,7 @@ def run_algorithm(schedule_data_id):
 
     # run_genetic_algorithm(doctors)
     population, schedule_id = run_hill_climbing(doctors, schedule_data_id)
-    print("schedule_id", schedule_id)
+    print("000")
 
     end_time = time.perf_counter()
 

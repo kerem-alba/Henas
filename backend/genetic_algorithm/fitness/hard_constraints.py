@@ -14,7 +14,7 @@ def check_duplicate_shifts(schedule, schedule_data_id, log):
 
                     if log:
                         log_text = (
-                            f"{doctor_code} has been assigned {count} times on Day {day_index + 1}, Shift {shift_index + 1}"
+                            f"[!] Dr. {doctor_code}: Aynı nöbette {count} kere - {day_index + 1}. gün, {shift_index + 1}. shift."
                         )
                         with open("generation_log.txt", "a") as log_file:
                             log_file.write(log_text + "\n")
@@ -37,8 +37,7 @@ def check_consecutive_shifts(schedule,schedule_data_id, log):
 
                     if log:
                         log_text = (
-                            f"{doctor_code} has consecutive shifts on Day {day_index + 1}, "
-                            f"Shift {shift_index + 1} and {shift_index + 2}"
+                            f"[!] Dr. {doctor_code}: Ardışık nöbet - {day_index + 1}. gün "
                         )
 
                         with open("generation_log.txt", "a") as log_file:
@@ -54,8 +53,7 @@ def check_consecutive_shifts(schedule,schedule_data_id, log):
                         penalty += hard_penalty
                         if log:
                             log_text = (
-                                f"{doctor_code} has a shift on consecutive days: Day {day_index + 1} "
-                                f"(Shift {shift_index + 2}) and Day {day_index + 2} (Shift {shift_index + 1})"
+                                f"[!] Dr. {doctor_code}: Ardışık nöbet - {day_index + 1}. günün gecesi ve ertesi sabah "
                             )
                             with open("generation_log.txt", "a") as log_file:
                                 log_file.write(log_text + "\n")
@@ -77,7 +75,7 @@ def check_three_consecutive_night_shifts(schedule,schedule_data_id, log):
                 penalty += hard_penalty
                 if log:
                     log_text = (
-                        f"Doctor {doctor_code} assigned to 3 consecutive night shifts starting from Day {day_index + 1}"
+                        f"[!] Dr. {doctor_code}: 3 gece üst üste nöbet - {day_index + 1}. günden itibaren"
                     )
                     with open("generation_log.txt", "a") as log_file:
                         log_file.write(log_text + "\n")

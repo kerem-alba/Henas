@@ -259,6 +259,8 @@ export const runAlgorithm = async (scheduleDataId) => {
       body: JSON.stringify({ schedule_id: scheduleDataId }),
     });
 
+    console.log("response", response);
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -297,9 +299,14 @@ export const getScheduleDataById = async (scheduleId) => {
   }
 };
 
-export const addScheduleData = async (name, schedule) => {
+export const addScheduleData = async (name, schedule, firstDay, daysInMonth) => {
   try {
-    const requestData = { name, schedule };
+    const requestData = {
+      name,
+      schedule,
+      first_day: firstDay,
+      days_in_month: daysInMonth,
+    };
 
     const response = await fetch(`${API_BASE_URL}/schedule-data`, {
       method: "POST",
@@ -383,6 +390,21 @@ export const getSchedules = async () => {
     return await response.json();
   } catch (error) {
     console.error("Nöbet listelerini getirirken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const deleteScheduleById = async (scheduleId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/schedules/${scheduleId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Nöbet listesi silerken hata oluştu:", error);
     throw error;
   }
 };
