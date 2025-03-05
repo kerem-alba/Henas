@@ -2,8 +2,10 @@ import React from "react";
 
 const ScheduleResultTable = ({ schedule, selectedDoctorCode, firstDay }) => {
   console.log("firstDay:", firstDay);
+
+  // schedule yoksa veya boşsa tabloyu hiç göstermeyelim, sadece null dönderelim.
   if (!schedule || schedule.length === 0) {
-    return <p className="text-center mt-4">Henüz algoritma çalıştırılmadı.</p>;
+    return null;
   }
 
   const daysOfWeek = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
@@ -11,9 +13,9 @@ const ScheduleResultTable = ({ schedule, selectedDoctorCode, firstDay }) => {
   // firstDay string olarak geliyor, bunu dizideki index değerine çevirelim.
   let firstDayIndex = daysOfWeek.indexOf(firstDay);
 
-  // Eğer firstDayIndex -1 dönerse (geçersiz değer), varsayılan olarak Pazartesi seç
+  // Eğer firstDayIndex -1 dönerse (geçersiz değer), varsayılan olarak 0 (Pazartesi) seç
   if (firstDayIndex === -1) {
-    console.error(`Geçersiz gün adı: ${firstDay}, varsayılan olarak "Pzt" alındı.`);
+    console.error(`Geçersiz gün adı: ${firstDay}, varsayılan olarak "Pazartesi" alındı.`);
     firstDayIndex = 0;
   }
 

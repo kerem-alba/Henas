@@ -1,6 +1,11 @@
 import psycopg2
 import json
 
+from flask_bcrypt import Bcrypt
+from psycopg2.extras import RealDictCursor
+
+bcrypt = Bcrypt()
+
 
 # Veritabanı bağlantı bilgileri
 DB_CONFIG = {
@@ -579,3 +584,17 @@ def get_all_schedules():
 
     return schedules
 
+def authenticate_user(username, password):
+    """Kullanıcı adı ve şifre ile doğrulama yapar."""
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute("SELECT id, password FROM users WHERE username = %s", (username,))
+    user = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if user and bcrypt.check_password_hash(user["password"], password):
+        return user["id"]  # Başarılı giriş
+    return None  # Hatalı giriş

@@ -1,5 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, create_refresh_token
+
 
 from services.database_service import (
     get_detailed_doctors,
@@ -25,13 +27,52 @@ from services.database_service import (
     add_schedule,
     delete_schedule,
     get_all_schedules,
+    authenticate_user,
 )
 from run_algorithm import run_algorithm
 import json
+from datetime import timedelta
 
 
 app = Flask(__name__)
+app.config["JWT_SECRET_KEY"] = "supersecretkey"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+jwt = JWTManager(app)  
 CORS(app)
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    """Kullanıcı girişini doğrular ve JWT token döndürür."""
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"error": "Kullanıcı adı ve şifre gerekli"}), 400
+
+    user_id = authenticate_user(username, password)
+    
+    if user_id:
+        access_token = create_access_token(identity=str(user_id))  # ID'yi string yapıyoruz
+        refresh_token = create_refresh_token(identity=str(user_id))  # Yeni refresh token ekledik
+        return jsonify({
+            "message": "Giriş başarılı",
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }), 200
+    else:
+        return jsonify({"error": "Geçersiz kullanıcı adı veya şifre"}), 401
+
+
+@app.route("/refresh", methods=["POST"])
+  
+def refresh():
+    """Refresh token ile yeni access token üretir."""
+    user_id = get_jwt_identity()
+    new_access_token = create_access_token(identity=user_id)
+    return jsonify({"access_token": new_access_token}), 200
+   
 
 
 @app.route("/get-doctors", methods=["GET"])
@@ -220,6 +261,7 @@ def update_shift_areas_endpoint():
         return jsonify({"error": str(e)}), 500
     
 @app.route("/shift-areas/<int:shift_area_id>", methods=["DELETE"])
+  
 def delete_shift_area_endpoint(shift_area_id):
     try:
         delete_shift_area(shift_area_id)
@@ -229,6 +271,7 @@ def delete_shift_area_endpoint(shift_area_id):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/schedule-data/<int:schedule_id>", methods=["GET"])
+  
 def get_schedule_data_endpoint(schedule_id):
     try:
         schedule = get_schedule_data_by_id(schedule_id)
@@ -243,6 +286,7 @@ def get_schedule_data_endpoint(schedule_id):
 
 
 @app.route("/schedule-data", methods=["GET"])
+  
 def get_all_schedule_data_endpoint():
     try:
         schedule_data = get_all_schedule_data()
@@ -251,6 +295,7 @@ def get_all_schedule_data_endpoint():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/schedule-data", methods=["POST"])
+  
 def add_schedule_data_endpoint():
     try:
         data = request.json
@@ -270,6 +315,7 @@ def add_schedule_data_endpoint():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/schedule-data/<int:schedule_id>", methods=["PUT"])
+  
 def update_schedule_data_endpoint(schedule_id):
     try:
         data = request.json
@@ -285,6 +331,7 @@ def update_schedule_data_endpoint(schedule_id):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/schedule-data/<int:schedule_id>", methods=["DELETE"])
+  
 def delete_schedule_data_endpoint(schedule_id):
     try:
         delete_schedule_data(schedule_id)
@@ -295,6 +342,7 @@ def delete_schedule_data_endpoint(schedule_id):
 
 
 @app.route("/schedules/<int:schedule_id>", methods=["GET"])
+  
 def get_schedule_by_id_endpoint(schedule_id):
     """Belirtilen ID'ye sahip schedule'ı getirir."""
     try:
@@ -309,6 +357,7 @@ def get_schedule_by_id_endpoint(schedule_id):
 
 
 @app.route("/schedules/<int:schedule_id>", methods=["DELETE"])
+  
 def delete_schedule_endpoint(schedule_id):
     """Belirtilen ID'ye sahip schedule'ı siler."""
     try:
@@ -318,6 +367,7 @@ def delete_schedule_endpoint(schedule_id):
         return jsonify({"error": str(e)}), 500
     
 @app.route("/schedules", methods=["GET"])
+  
 def list_schedules_endpoint():
     try:
         schedules = get_all_schedules()

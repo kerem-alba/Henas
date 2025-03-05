@@ -17,6 +17,7 @@ import {
 import DoctorTable from "../components/DoctorTable";
 import SeniorityTable from "../components/SeniorityTable";
 import ShiftAreasTable from "../components/ShiftAreasTable";
+import Footer from "../components/Footer";
 import "./styles.css";
 
 const Hospital = () => {
@@ -264,42 +265,45 @@ const Hospital = () => {
   };
 
   return (
-    <div className="container-fluid p-5 background-gradient">
-      <h2 className="fw-bold display-5 text-black ms-3">Hastane Veritabanı</h2>
-      <div className="row mt-5">
-        <div className="col-lg-6 col-md-12 mb-4 px-4">
-          <DoctorTable
-            doctors={doctors}
-            seniorities={seniorities}
-            handleNameChange={handleNameChange}
-            handleSeniorityChange={handleSeniorityChange}
-            handleSaveChanges={handleSaveChanges}
-            handleAddDoctor={handleAddDoctor}
-            handleDeleteDoctor={handleDeleteDoctor}
-          />
-        </div>
+    <div className="d-flex flex-column background-gradient min-vh-100">
+      <div className="container-fluid p-5 flex-grow-1">
+        <h2 className="fw-bold display-6 text-black ms-3">Hastane Veritabanı</h2>
+        <div className="row mt-5">
+          <div className="col-lg-6 col-md-12 mb-4 px-4">
+            <DoctorTable
+              doctors={doctors}
+              seniorities={seniorities}
+              handleNameChange={handleNameChange}
+              handleSeniorityChange={handleSeniorityChange}
+              handleSaveChanges={handleSaveChanges}
+              handleAddDoctor={handleAddDoctor}
+              handleDeleteDoctor={handleDeleteDoctor}
+            />
+          </div>
 
-        <div className="col-lg-6 col-md-12 mb-4 px-4">
-          <SeniorityTable
-            detailedSeniorities={detailedSeniorities}
-            shiftAreas={shiftAreas}
-            handleMaxShiftsChange={handleMaxShiftsChange}
-            handleSeniorityNameChange={handleSeniorityNameChange}
-            handleSaveSeniorityChanges={handleSaveSeniorityChanges}
-            handleAddSeniority={handleAddSeniority}
-            handleDeleteSeniority={handleDeleteSeniority}
-          />
+          <div className="col-lg-6 col-md-12 mb-4 px-4">
+            <SeniorityTable
+              detailedSeniorities={detailedSeniorities}
+              shiftAreas={shiftAreas}
+              handleMaxShiftsChange={handleMaxShiftsChange}
+              handleSeniorityNameChange={handleSeniorityNameChange}
+              handleSaveSeniorityChanges={handleSaveSeniorityChanges}
+              handleAddSeniority={handleAddSeniority}
+              handleDeleteSeniority={handleDeleteSeniority}
+            />
 
-          <ShiftAreasTable
-            shiftAreas={shiftAreas}
-            handleShiftAreaNameChange={handleShiftAreaNameChange}
-            handleMinDoctorsPerAreaChange={handleMinDoctorsPerAreaChange}
-            handleSaveShiftAreaChanges={handleSaveShiftAreaChanges}
-            handleAddShiftArea={handleAddShiftArea}
-            handleDeleteShiftArea={handleDeleteShiftArea}
-          />
+            <ShiftAreasTable
+              shiftAreas={shiftAreas}
+              handleShiftAreaNameChange={handleShiftAreaNameChange}
+              handleMinDoctorsPerAreaChange={handleMinDoctorsPerAreaChange}
+              handleSaveShiftAreaChanges={handleSaveShiftAreaChanges}
+              handleAddShiftArea={handleAddShiftArea}
+              handleDeleteShiftArea={handleDeleteShiftArea}
+            />
+          </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
