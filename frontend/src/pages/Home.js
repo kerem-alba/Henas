@@ -2,7 +2,7 @@ import Footer from "../components/Footer";
 
 export default function HomePage() {
   return (
-    <div className="d-flex flex-column background-gradient ">
+    <div className="d-flex flex-column background-gradient min-vh-100">
       <div className="container-fluid p-5 flex-grow-1">
         <div className="d-flex justify-content-center mb-3 pb-4">
           <img src="/henas-bot.png" alt="Henas Bot" width="150" height="150" />
@@ -29,7 +29,7 @@ export default function HomePage() {
               <div className="card-body text-center">
                 <h5 className="fw-bold">2️⃣ Nöbet Alanları</h5>
                 <p className="text-white-50">Kıdemlerin nöbet limitlerini ve alanlarını belirleyin.</p>
-                <a href="/hospital#settings" className="btn btn-success w-50 ">
+                <a href="/hospital" className="btn btn-success w-50 ">
                   Nöbet Ayarlarına Git
                 </a>
               </div>

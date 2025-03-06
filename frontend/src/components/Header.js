@@ -42,12 +42,12 @@ const Header = () => {
               </a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#ayarlar">
+              <a className="nav-link" href="#settings">
                 ⚙️ Ayarlar
               </a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#profil">
+              <a className="nav-link" href="/profile">
                 👤 Profil
               </a>
             </li>

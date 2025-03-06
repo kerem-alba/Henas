@@ -585,7 +585,6 @@ def get_all_schedules():
     return schedules
 
 def authenticate_user(username, password):
-    """Kullanıcı adı ve şifre ile doğrulama yapar."""
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
@@ -596,5 +595,5 @@ def authenticate_user(username, password):
     conn.close()
 
     if user and bcrypt.check_password_hash(user["password"], password):
-        return user["id"]  # Başarılı giriş
-    return None  # Hatalı giriş
+        return user["id"]  
+    return None  

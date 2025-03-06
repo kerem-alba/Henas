@@ -1,5 +1,36 @@
 const API_BASE_URL = "http://127.0.0.1:5000";
 
+export const login = async (username, password) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
+      localStorage.setItem("username", username);
+      return data;
+    } else {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Geçersiz kullanıcı adı veya şifre");
+    }
+  } catch (error) {
+    console.error("Giriş yaparken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const logout = () => {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  localStorage.removeItem("username");
+};
+
 export const getDoctors = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/doctors`);

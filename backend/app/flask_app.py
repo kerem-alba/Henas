@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, create_refresh_token
-
+from config.secrets import Config
 
 from services.database_service import (
     get_detailed_doctors,
@@ -31,12 +31,10 @@ from services.database_service import (
 )
 from run_algorithm import run_algorithm
 import json
-from datetime import timedelta
 
 
 app = Flask(__name__)
-app.config["JWT_SECRET_KEY"] = "supersecretkey"
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config.from_object(Config)
 jwt = JWTManager(app)  
 CORS(app)
 
@@ -54,7 +52,7 @@ def login():
     user_id = authenticate_user(username, password)
     
     if user_id:
-        access_token = create_access_token(identity=str(user_id))  # ID'yi string yapıyoruz
+        access_token = create_access_token(identity=str(user_id))  
         refresh_token = create_refresh_token(identity=str(user_id))  # Yeni refresh token ekledik
         return jsonify({
             "message": "Giriş başarılı",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import LeavesTable from "./LeavesTable";
 import { addScheduleData, updateScheduleData, getAllScheduleData } from "../services/apiService";
 
@@ -9,6 +10,8 @@ const ScheduleTable = ({ doctors, detailedSeniorities, scheduleData, firstDay, d
   const [mandatoryLeaves, setMandatoryLeaves] = useState([]);
   const [optionalLeaves, setOptionalLeaves] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
+
+  const navigate = useNavigate(); // Navigate fonksiyonunu tanımla
 
   const tableTitle = scheduleData ? scheduleData.name : "Yeni Nöbet Listesi Verisi Ekle";
 
@@ -93,6 +96,7 @@ const ScheduleTable = ({ doctors, detailedSeniorities, scheduleData, firstDay, d
       if (scheduleData && scheduleData.id) {
         await updateScheduleData(scheduleData.id, scheduleName, newScheduleData);
         alert("Nöbet listesi başarıyla güncellendi!");
+        navigate("/create-schedule");
       } else {
         await addScheduleData(scheduleName, newScheduleData, firstDay, daysInMonth);
         alert("Nöbet listesi başarıyla kaydedildi!");
