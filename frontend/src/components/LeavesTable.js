@@ -1,8 +1,17 @@
 import React from "react";
 import "./styles.css";
+import { useState, useEffect } from "react";
 
-const LeavesTable = ({ doctorId, mandatoryLeaves, optionalLeaves, setMandatoryLeaves, setOptionalLeaves }) => {
-  const days = Array.from({ length: 30 }, (_, i) => i + 1);
+const LeavesTable = ({ doctorId, mandatoryLeaves, optionalLeaves, setMandatoryLeaves, setOptionalLeaves, daysInMonth }) => {
+  const [daysCount, setDaysCount] = useState(31);
+
+  useEffect(() => {
+    if (daysInMonth) {
+      setDaysCount(daysInMonth);
+    }
+  }, [daysInMonth]);
+
+  const days = Array.from({ length: daysCount }, (_, i) => i + 1);
   const shifts = ["Gündüz", "Gece"];
 
   // Hücrenin zorunlu/opsiyonel mi olduğunu bulalım

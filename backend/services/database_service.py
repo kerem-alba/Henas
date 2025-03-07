@@ -312,7 +312,7 @@ def get_schedule_data_by_id(schedule_id):
         cur = conn.cursor()
 
         cur.execute("""
-            SELECT schedule_data_name, schedule_data, first_day, days_in_month 
+            SELECT id, schedule_data_name, schedule_data, first_day, days_in_month 
             FROM schedule_data 
             WHERE id = %s
         """, (schedule_id,))
@@ -320,10 +320,11 @@ def get_schedule_data_by_id(schedule_id):
         row = cur.fetchone()
 
         schedule_data = {
-            "name": row[0],
-            "data": row[1],
-            "first_day": row[2],
-            "days_in_month": row[3]
+            "id": row[0],
+            "name": row[1],
+            "data": row[2],
+            "first_day": row[3],
+            "days_in_month": row[4]
         } if row else {}
 
         cur.close()
@@ -334,6 +335,7 @@ def get_schedule_data_by_id(schedule_id):
     except Exception as e:
         print("get_schedule_data_by_id fonksiyonunda hata:", e)
         return {}
+
 
 
 def get_all_schedule_data():

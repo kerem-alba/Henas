@@ -92,8 +92,8 @@ def check_weekend_free(schedule, doctors, schedule_data_id, log):
     # Haftanın günlerini düzenle
     total_days = len(schedule)
     weekend_days = [
-        (g.week_start_day + 5) % 7,
-        (g.week_start_day + 6) % 7,
+        (5 - g.week_start_day) % 7,
+        (6 - g.week_start_day) % 7,
     ]  # Cumartesi ve Pazar günleri
 
     # Her doktorun hafta sonu boş olup olmadığını kontrol et

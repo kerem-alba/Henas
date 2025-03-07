@@ -1,5 +1,5 @@
 # Algoritma Parametreleri
-max_generations = 80000
+max_generations = 100000
 population_size = 1
 shifts_per_day = 2
 min_doctors_per_shift = 5
