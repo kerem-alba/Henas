@@ -186,25 +186,22 @@ def add_seniority_endpoint():
     try:
         data = request.json
 
-        if (
-            not data.get("seniority_name")
-            or not data.get("max_shifts_per_month")
-            or not data.get("shift_area_ids")
-        ):
-            return (
-                jsonify(
-                    {
-                        "error": "seniority_name, max_shifts_per_month, and shift_area_ids are required"
-                    }
-                ),
-                400,
-            )
+        if not data.get("seniority_name") or not data.get("max_shifts_per_month"):
+            return jsonify({"error": "seniority_name ve max_shifts_per_month gereklidir"}), 400
 
+        # Eğer shift_area_ids boşsa, tüm shift_areas ID’lerini al
+        if not data.get("shift_area_ids"):
+            shift_areas = get_shift_areas()  # Mevcut methodu kullan
+            data["shift_area_ids"] = [area["id"] for area in shift_areas.values()]
+
+        # Servis fonksiyonunu çağır (veritabanı işlemi burada yapılır)
         new_id = add_seniority(data)
-        return jsonify({"id": new_id, "message": "Seniority added successfully"}), 201
+
+        return jsonify({"id": new_id, "message": "Kıdem başarıyla eklendi!"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 

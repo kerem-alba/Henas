@@ -1,5 +1,7 @@
 import psycopg2
 import json
+import config.globals as g
+
 
 from flask_bcrypt import Bcrypt
 from psycopg2.extras import RealDictCursor
@@ -7,18 +9,63 @@ from psycopg2.extras import RealDictCursor
 bcrypt = Bcrypt()
 
 
-# Veritabanı bağlantı bilgileri
-DB_CONFIG = {
-    "dbname": "postgres",
+AUTH_DB_CONFIG = {
+    "dbname": "auth_db",
     "user": "postgres",
     "password": "admin",
     "host": "localhost",
     "port": 5432,
 }
 
+HOSPITAL_DB_CONFIGS = {
+    "gazi_db": {
+        "dbname": "gazi_db",
+        "user": "postgres",
+        "password": "admin",
+        "host": "localhost",
+        "port": 5432,
+    },
+    "testacil_db": {
+        "dbname": "testacil_db",
+        "user": "postgres",
+        "password": "admin",
+        "host": "localhost",
+        "port": 5432,
+    },
+    # Buraya diğer hastaneleri ekleyebilirsin
+}
+
+def authenticate_user(username, password):
+    auth_conn  = psycopg2.connect(**AUTH_DB_CONFIG)
+    auth_cur  = auth_conn.cursor(cursor_factory=RealDictCursor)
+
+    auth_cur.execute("SELECT id, password_hash, hospital_db_name FROM users WHERE username = %s", (username,))
+    user = auth_cur.fetchone()
+
+    auth_cur.close()
+    auth_conn.close()
+
+    if user and bcrypt.check_password_hash(user["password_hash"], password):
+        g.hospital_db_name = user["hospital_db_name"]
+
+        # Hastane veritabanı var mı kontrol et
+        if g.hospital_db_name in HOSPITAL_DB_CONFIGS:
+            return {"user_id": user["id"], "hospital_db": g.hospital_db_name}
+        else:
+            return None  # Geçersiz hastane DB adı
+
+    return None 
+
+def connect_to_hospital_db():
+    """ Kullanıcının hastane veritabanına bağlan """
+    if g.hospital_db_name and g.hospital_db_name in HOSPITAL_DB_CONFIGS:
+        return psycopg2.connect(**HOSPITAL_DB_CONFIGS[g.hospital_db_name])
+    else:
+        raise Exception("Hastane veritabanı tanımlı değil veya geçersiz!")
+
 
 def get_detailed_doctors():
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
     cur = conn.cursor()
 
     cur.execute(
@@ -45,7 +92,7 @@ def get_detailed_doctors():
 
 
 def get_doctors():
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
     cur = conn.cursor()
 
     cur.execute(
@@ -69,7 +116,7 @@ def get_doctors():
 
 
 def add_doctor(data):
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
     cur = conn.cursor()
     cur.execute(
         "INSERT INTO doctors (name, seniority_id) VALUES (%s, %s) RETURNING id",
@@ -85,7 +132,7 @@ def add_doctor(data):
 
 def update_all_doctors(data):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
         cur = conn.cursor()
 
         for doctor in data:
@@ -110,7 +157,7 @@ def update_all_doctors(data):
 
 
 def delete_doctor(doctor_id):
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
     cur = conn.cursor()
 
     cur.execute("DELETE FROM doctors WHERE id = %s", (doctor_id,))
@@ -120,7 +167,7 @@ def delete_doctor(doctor_id):
 
 
 def get_seniority():
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
     cur = conn.cursor()
 
     # Seniority tablosunu getir
@@ -150,7 +197,7 @@ def get_seniority():
     return seniority_list
 
 def get_detailed_seniority():
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
     cur = conn.cursor()
 
     cur.execute(
@@ -188,14 +235,20 @@ def get_detailed_seniority():
 
 
 def add_seniority(data):
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
     cur = conn.cursor()
 
-    cur.execute(
-        "INSERT INTO seniority (seniority_name, max_shifts_per_month, shift_area_ids) VALUES (%s, %s, %s) RETURNING id",
-        (data["seniority_name"], data["max_shifts_per_month"], data["shift_area_ids"]),
-    )
+    # PostgreSQL JSONB formatına uygun hale getir
+    shift_area_ids_json = json.dumps(data["shift_area_ids"])
+
+    insert_query = """
+        INSERT INTO seniority (seniority_name, max_shifts_per_month, shift_area_ids)
+        VALUES (%s, %s, %s)
+        RETURNING id;
+    """
+    cur.execute(insert_query, (data["seniority_name"], data["max_shifts_per_month"], shift_area_ids_json))
     new_id = cur.fetchone()[0]
+
     conn.commit()
     cur.close()
     conn.close()
@@ -203,12 +256,10 @@ def add_seniority(data):
     return new_id
 
 
-
-
-
 def update_all_seniorities(data):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
+
         cur = conn.cursor()
 
         for seniority in data:
@@ -239,7 +290,8 @@ def update_all_seniorities(data):
 
 
 def delete_seniority(seniority_id):
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
+
     cur = conn.cursor()
 
     cur.execute("DELETE FROM seniority WHERE id = %s", (seniority_id,))
@@ -249,7 +301,8 @@ def delete_seniority(seniority_id):
 
 
 def get_shift_areas():
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
+
     cur = conn.cursor()
 
     cur.execute("SELECT id, area_name, min_doctors_per_area  FROM shift_areas")
@@ -262,7 +315,8 @@ def get_shift_areas():
 
 
 def add_shift_area(data):
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
+
     cur = conn.cursor()
 
     cur.execute(
@@ -279,7 +333,8 @@ def add_shift_area(data):
 
 def update_all_shift_areas(data):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
+
         cur = conn.cursor()
 
         for area in data:
@@ -298,7 +353,8 @@ def update_all_shift_areas(data):
 
 
 def delete_shift_area(area_id):
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
+
     cur = conn.cursor()
 
     cur.execute("DELETE FROM shift_areas WHERE id = %s", (area_id,))
@@ -308,7 +364,8 @@ def delete_shift_area(area_id):
 
 def get_schedule_data_by_id(schedule_id):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
+
         cur = conn.cursor()
 
         cur.execute("""
@@ -340,7 +397,8 @@ def get_schedule_data_by_id(schedule_id):
 
 def get_all_schedule_data():
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
+
         cur = conn.cursor()
 
         cur.execute("SELECT id, schedule_data_name, schedule_data, created_at FROM schedule_data ORDER BY created_at DESC")
@@ -368,7 +426,8 @@ def get_all_schedule_data():
 
 def add_schedule_data(name, schedule_json, first_day, days_in_month):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
+
         cur = conn.cursor()
 
         cur.execute(
@@ -395,7 +454,8 @@ def add_schedule_data(name, schedule_json, first_day, days_in_month):
     
 def delete_schedule_data(schedule_id):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
+
         cur = conn.cursor()
 
         cur.execute("DELETE FROM schedule_data WHERE id = %s", (schedule_id,))
@@ -413,7 +473,8 @@ def delete_schedule_data(schedule_id):
 
 def update_schedule_data(schedule_id, new_name, new_schedule_json):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
+
         cur = conn.cursor()
 
         cur.execute(
@@ -435,7 +496,8 @@ def update_schedule_data(schedule_id, new_name, new_schedule_json):
 
 
 def get_schedule_by_id(schedule_id):
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
+
     cur = conn.cursor()
 
     cur.execute(
@@ -466,7 +528,8 @@ def get_schedule_by_id(schedule_id):
 
 def add_schedule(schedule_data_id, schedule):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
+
         cur = conn.cursor()
         
         cur.execute(
@@ -492,7 +555,8 @@ def add_schedule(schedule_data_id, schedule):
 
 def add_fitness_score(schedule_id, fitness_score):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
+
         cur = conn.cursor()
 
         cur.execute(
@@ -514,7 +578,8 @@ def add_fitness_score(schedule_id, fitness_score):
 
 def add_log_messages(schedule_id, log_messages):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        conn = connect_to_hospital_db()
+
         cur = conn.cursor()
 
         # Mevcut log_messages değerini al
@@ -549,7 +614,8 @@ def add_log_messages(schedule_id, log_messages):
 
 def delete_schedule(schedule_id):
     """Belirtilen ID'ye sahip schedule'ı siler."""
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
+
     cur = conn.cursor()
 
     cur.execute("DELETE FROM schedules WHERE id = %s", (schedule_id,))
@@ -558,7 +624,8 @@ def delete_schedule(schedule_id):
     conn.close()
 
 def get_all_schedules():
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = connect_to_hospital_db()
+
     cur = conn.cursor()
 
     cur.execute(
@@ -586,16 +653,3 @@ def get_all_schedules():
 
     return schedules
 
-def authenticate_user(username, password):
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-
-    cur.execute("SELECT id, password FROM users WHERE username = %s", (username,))
-    user = cur.fetchone()
-
-    cur.close()
-    conn.close()
-
-    if user and bcrypt.check_password_hash(user["password"], password):
-        return user["id"]  
-    return None  

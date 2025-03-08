@@ -10,3 +10,5 @@ week_days_map = {
     "Cumartesi": 6,
     "Pazar": 7
 }
+
+hospital_db_name = None

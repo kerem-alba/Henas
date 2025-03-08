@@ -13,6 +13,9 @@ const SeniorityTable = ({
   const [newSeniorityName, setNewSeniorityName] = useState("");
   const [newMaxShifts, setNewMaxShifts] = useState("");
 
+  console.log("detailedSeniorities", detailedSeniorities);
+  console.log("shiftAreas", shiftAreas);
+
   return (
     <div className="mb-4">
       <h3 className="text-center bg-dark text-white p-3 shadow-md rounded-4">Kıdem Listesi</h3>

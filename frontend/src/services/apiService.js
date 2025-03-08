@@ -135,7 +135,7 @@ export const addSeniority = async (name, maxShifts, shiftAreas = []) => {
     const requestData = {
       seniority_name: name,
       max_shifts_per_month: maxShifts,
-      shift_area_ids: shiftAreas.map((area) => area.id), // Shift alanlarını ID olarak gönderiyoruz
+      shift_area_ids: shiftAreas.length > 0 ? shiftAreas.map((area) => area.id) : [], // Eğer boşsa, direkt []
     };
 
     console.log("Gönderilen veri:", requestData); // Konsolda kontrol et
