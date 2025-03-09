@@ -93,9 +93,6 @@ const ScheduleTable = ({ doctors, detailedSeniorities, scheduleData, firstDay, d
         };
       });
 
-      console.log("scheduleData", scheduleData);
-      console.log("scheduleData.id", scheduleData.id);
-
       if (scheduleData && scheduleData.id) {
         await updateScheduleData(scheduleData.id, scheduleName, newScheduleData);
         alert("Nöbet listesi başarıyla güncellendi!");
