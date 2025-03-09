@@ -1,43 +1,25 @@
 import psycopg2
 import json
+import os
 import config.globals as g
-
-
 from flask_bcrypt import Bcrypt
 from psycopg2.extras import RealDictCursor
+from dotenv import load_dotenv
+load_dotenv()
+
 
 bcrypt = Bcrypt()
 
-
-AUTH_DB_CONFIG = {
-    "dbname": "auth_db",
-    "user": "postgres",
-    "password": "admin",
-    "host": "localhost",
-    "port": 5432,
-}
-
 HOSPITAL_DB_CONFIGS = {
-    "gazi_db": {
-        "dbname": "gazi_db",
-        "user": "postgres",
-        "password": "admin",
-        "host": "localhost",
-        "port": 5432,
-    },
-    "testacil_db": {
-        "dbname": "testacil_db",
-        "user": "postgres",
-        "password": "admin",
-        "host": "localhost",
-        "port": 5432,
-    },
-    # Buraya diğer hastaneleri ekleyebilirsin
+    "testacil_db": os.getenv("TEST_DB_URL"),
+    "gazi_db": os.getenv("GAZI_DB_URL"),
 }
+
 
 def authenticate_user(username, password):
-    auth_conn  = psycopg2.connect(**AUTH_DB_CONFIG)
-    auth_cur  = auth_conn.cursor(cursor_factory=RealDictCursor)
+    """ Kullanıcıyı doğrulayıp hangi hastane veritabanına bağlanacağını belirler. """
+    auth_conn = psycopg2.connect(os.getenv("AUTH_DB_URL"), sslmode="require")
+    auth_cur = auth_conn.cursor(cursor_factory=RealDictCursor)
 
     auth_cur.execute("SELECT id, password_hash, hospital_db_name FROM users WHERE username = %s", (username,))
     user = auth_cur.fetchone()
@@ -47,21 +29,17 @@ def authenticate_user(username, password):
 
     if user and bcrypt.check_password_hash(user["password_hash"], password):
         g.hospital_db_name = user["hospital_db_name"]
+        return {"user_id": user["id"], "hospital_db": g.hospital_db_name}
 
-        # Hastane veritabanı var mı kontrol et
-        if g.hospital_db_name in HOSPITAL_DB_CONFIGS:
-            return {"user_id": user["id"], "hospital_db": g.hospital_db_name}
-        else:
-            return None  # Geçersiz hastane DB adı
-
-    return None 
+    return None
 
 def connect_to_hospital_db():
     """ Kullanıcının hastane veritabanına bağlan """
-    if g.hospital_db_name and g.hospital_db_name in HOSPITAL_DB_CONFIGS:
-        return psycopg2.connect(**HOSPITAL_DB_CONFIGS[g.hospital_db_name])
+    if g.hospital_db_name in HOSPITAL_DB_CONFIGS:
+        return psycopg2.connect(HOSPITAL_DB_CONFIGS[g.hospital_db_name], sslmode="require")
     else:
         raise Exception("Hastane veritabanı tanımlı değil veya geçersiz!")
+
 
 
 def get_detailed_doctors():
