@@ -58,7 +58,7 @@ def process_population(population, doctors, schedule_data_id):
         # Schedule'ı veritabanına kaydet
         schedule_id = add_schedule(schedule_data_id, population[idx])
         # Fitness puanını hesapla
-        fitness_score = calculate_fitness(population[idx], doctors, schedule_id, log=True)
+        fitness_score = calculate_fitness(population[idx], doctors, schedule_id, log=False)
         add_fitness_score(schedule_id, fitness_score)
         # Schedule ve fitness puanını birlikte sakla
         processed_population.append((population[idx], fitness_score))
