@@ -304,7 +304,7 @@ def add_schedule_data_endpoint():
             data["first_day"], 
             data["days_in_month"]
         )
-        return jsonify({"id": new_id, "message": "Schedule data added successfully"}), 201
+        return jsonify(new_id), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
