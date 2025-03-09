@@ -17,7 +17,6 @@ HOSPITAL_DB_CONFIGS = {
 
 
 def authenticate_user(username, password):
-    """ Kullanıcıyı doğrulayıp hangi hastane veritabanına bağlanacağını belirler. """
     auth_conn = psycopg2.connect(os.getenv("AUTH_DB_URL"), sslmode="require")
     auth_cur = auth_conn.cursor(cursor_factory=RealDictCursor)
 
