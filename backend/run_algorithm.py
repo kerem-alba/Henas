@@ -31,7 +31,7 @@ def run_algorithm(schedule_data_id):
     elapsed_time = end_time - start_time
     minutes, seconds = divmod(elapsed_time, 60)
     print(
-        f"run_genetic_algorithm completed in {int(minutes)} minutes and {seconds:.2f} seconds"
+        f"Algorithm completed in {int(minutes)} minutes and {seconds:.2f} seconds"
     )
 
     return population, schedule_id

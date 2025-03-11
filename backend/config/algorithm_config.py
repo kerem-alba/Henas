@@ -1,5 +1,7 @@
+import os
+
 # Algoritma Parametreleri
-max_generations = 20000
+max_generations = int(os.getenv("MAX_GENERATIONS")) 
 population_size = 1
 shifts_per_day = 2
 min_doctors_per_shift = 5
