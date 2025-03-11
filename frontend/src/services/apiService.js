@@ -439,3 +439,36 @@ export const deleteScheduleById = async (scheduleId) => {
     throw error;
   }
 };
+
+export const getSettings = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/settings`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Ayarları alırken hata oluştu:", error);
+    throw error;
+  }
+};
+
+export const updateSettings = async (maxGenerations) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/settings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ max_generations: maxGenerations }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Ayarları güncellerken hata oluştu:", error);
+    throw error;
+  }
+};

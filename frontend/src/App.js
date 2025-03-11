@@ -7,6 +7,7 @@ import ScheduleLists from "./pages/ScheduleLists";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute"; // Güncellenmiş PrivateRoute
 
@@ -28,6 +29,7 @@ function App() {
           <Route path="/create-schedule" element={<CreateSchedule />} />
           <Route path="/schedule-lists" element={<ScheduleLists />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>

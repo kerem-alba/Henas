@@ -49,18 +49,8 @@ def doctor_swap(schedule):
     idx1 = random.randint(0, len(shift1) - 1)
     idx2 = random.randint(0, len(shift2) - 1)
 
-    doctor1 = shift1[idx1]
-    doctor2 = shift2[idx2]
-    log_entry = (
-        f"Doctor Swap Attempt: Day {day1_index + 1}, Shift {shift1_index + 1}, Doctor {doctor1} "
-        f"<--> Day {day2_index + 1}, Shift {shift2_index + 1}, Doctor {doctor2}\n"
-    )
-
     # Doktorları yer değiştir
     shift1[idx1], shift2[idx2] = shift2[idx2], shift1[idx1]
-
-    with open("generation_log.txt", "a") as log_file:
-        log_file.write(log_entry)
 
     return schedule
 
@@ -82,15 +72,6 @@ def doctor_slide(schedule):
     schedule[day_from][shift_from].remove(doctor_to_slide)
     schedule[day_to][shift_to].append(doctor_to_slide)
 
-    log_entry = (
-        f"Doctor Slide Attempt: Doctor {doctor_to_slide} to move from "
-        f"Day {day_from + 1}, Shift {shift_from + 1} "
-        f"to Day {day_to + 1}, Shift {shift_to + 1}\n"
-    )
-
-    with open("generation_log.txt", "a") as log_file:
-        log_file.write(log_entry)
-
     return schedule
 
 def shift_swap(schedule):
@@ -102,16 +83,9 @@ def shift_swap(schedule):
     shift1_index = random.randint(0, len(day1) - 1)
     shift2_index = random.randint(0, len(day2) - 1)
 
-    log_entry = (
-        f"Shift Swap Attempt: Day {day1_index + 1}, Shift {shift1_index + 1} "
-        f"<--> Day {day2_index + 1}, Shift {shift2_index + 1}\n"
-    )
-
     # İki shift'i yer değiştir
     day1[shift1_index], day2[shift2_index] = day2[shift2_index], day1[shift1_index]
 
-    with open("generation_log.txt", "a") as log_file:
-        log_file.write(log_entry)
 
     return schedule
 
@@ -120,14 +94,6 @@ def day_swap(schedule):
     """İki günü tamamen yer değiştirir."""
     idx1, idx2 = random.sample(range(len(schedule)), 2)  # İki günün indeksini seç
     schedule[idx1], schedule[idx2] = schedule[idx2], schedule[idx1]  # Yer değiştir
-
-    log_entry = (
-        f"Day Swap Attempt: Day {idx1 + 1} "
-        f"<--> Day {idx2 + 1}, Shift\n"
-    )
-
-    with open("generation_log.txt", "a") as log_file:
-        log_file.write(log_entry)
 
     return schedule
 

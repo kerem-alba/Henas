@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, create_refresh_token
 from config.secrets import Config
+import config.globals as g
+
 
 from services.database_service import (
     get_detailed_doctors,
@@ -352,7 +354,6 @@ def get_schedule_by_id_endpoint(schedule_id):
 
 
 @app.route("/schedules/<int:schedule_id>", methods=["DELETE"])
-  
 def delete_schedule_endpoint(schedule_id):
     """Belirtilen ID'ye sahip schedule'ı siler."""
     try:
@@ -362,10 +363,32 @@ def delete_schedule_endpoint(schedule_id):
         return jsonify({"error": str(e)}), 500
     
 @app.route("/schedules", methods=["GET"])
-  
 def list_schedules_endpoint():
     try:
         schedules = get_all_schedules()
         return jsonify(schedules)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route("/settings", methods=["GET"])
+def get_settings():
+    """Mevcut MAX_GENERATIONS değerini döndür."""
+    return jsonify({"max_generations": g.MAX_GENERATIONS}), 200
+
+@app.route("/settings", methods=["POST"])
+def update_settings():
+    """MAX_GENERATIONS değerini güncelle."""
+    try:
+        data = request.json
+        if "max_generations" in data:
+            g.MAX_GENERATIONS = int(data["max_generations"])  # Yeni değeri güncelle
+            return jsonify({
+                "message": "Çözüm kalitesi güncellendi!",
+                "max_generations": g.MAX_GENERATIONS
+            }), 200
+        else:
+            return jsonify({"error": "Geçersiz veri"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+

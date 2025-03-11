@@ -123,9 +123,7 @@ const CreateSchedule = () => {
           {!hasRunAlgorithm && !loading && !algorithmResult && <p className="text-muted">Henüz algoritma çalıştırılmadı.</p>}
           {loading && (
             <>
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Yükleniyor...</span>
-              </div>
+              <div className="spinner-border text-danger fs-3" role="status"></div>
               <p className="mt-2">Nöbet listesi oluşturuluyor, lütfen bekleyin...</p>
             </>
           )}

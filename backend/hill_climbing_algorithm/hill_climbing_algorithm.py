@@ -2,7 +2,6 @@ import copy
 from genetic_algorithm.initial_population import create_initial_population
 from genetic_algorithm.fitness.fitness_methods import calculate_fitness
 from config.algorithm_config import (
-    max_generations,
     doctor_swap_rate,
     doctor_slide_rate,
     shift_swap_rate,
@@ -18,6 +17,7 @@ def run_hill_climbing(doctors, schedule_data_id):
     daysInMonth = schedule_data.get("days_in_month")
     first_day = schedule_data.get("first_day", "Pazartesi") 
     g.week_start_day = g.week_days_map.get(first_day, 1)  
+    max_generations = g.MAX_GENERATIONS
 
     population = create_initial_population(doctors, daysInMonth)
     for generation in range(max_generations):
