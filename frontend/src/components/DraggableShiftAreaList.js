@@ -1,50 +1,38 @@
-import React, { useEffect, useState, useRef } from "react";
-import DraggableList from "react-draggable-list";
+import React, { useEffect, useState } from "react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 export default function DraggableShiftAreaList({ allShiftAreas, activeAreaNames, onUpdate }) {
   const [items, setItems] = useState([]);
-  const containerRef = useRef(null);
 
   useEffect(() => {
-    // 1) shift_area_names dizisine göre, aktif olanları doğru sırada ekle
     const mappedActive = activeAreaNames
       .map((areaName) => {
         const found = allShiftAreas.find((a) => a.area_name === areaName);
-        if (!found) return null; // DB'de bulunmayan isim varsa
-
-        return {
-          id: found.id,
-          name: found.area_name,
-          active: true,
-        };
+        if (!found) return null;
+        return { id: found.id.toString(), name: found.area_name, active: true };
       })
       .filter(Boolean);
 
-    // 2) allShiftAreas dizisinde olup, aktifAreaNames içinde olmayanları "pasif" olarak ekle
     const mappedPassive = allShiftAreas
       .filter((a) => !activeAreaNames.includes(a.area_name))
-      .map((a) => ({
-        id: a.id,
-        name: a.area_name,
-        active: false,
-      }));
+      .map((a) => ({ id: a.id.toString(), name: a.area_name, active: false }));
 
-    // 3) Final liste: Aktifler DB sırasına göre + Pasifler sonda
-    const finalList = [...mappedActive, ...mappedPassive];
-    console.log("useEffect -> finalList:", finalList);
-
-    setItems(finalList);
+    setItems([...mappedActive, ...mappedPassive]);
   }, [allShiftAreas, activeAreaNames]);
 
-  // Sürükleme bitince
-  const handleMoveEnd = (newList) => {
-    console.log("handleMoveEnd sonrası yeni sıralama:", newList);
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const newList = Array.from(items);
+    const [movedItem] = newList.splice(result.source.index, 1);
+    newList.splice(result.destination.index, 0, movedItem);
+
     setItems(newList);
     const onlyActive = newList.filter((it) => it.active).map((it) => it.name);
     onUpdate?.(onlyActive);
   };
 
-  // Tıklayınca aktif/pasif
   const toggleActive = (id) => {
     setItems((prev) => {
       const updated = prev.map((x) => (x.id === id ? { ...x, active: !x.active } : x));
@@ -54,32 +42,43 @@ export default function DraggableShiftAreaList({ allShiftAreas, activeAreaNames,
     });
   };
 
-  // render şablonu
-  const ItemTemplate = ({ item, dragHandleProps }) => {
-    const handleProps = item.active ? dragHandleProps : {};
-    return (
-      <div
-        style={{
-          padding: "4px",
-          border: "1px solid #ccc",
-          borderRadius: 4,
-          background: item.active ? "#fff" : "#eee",
-          color: item.active ? "#000" : "#999",
-          cursor: item.active ? "move" : "pointer",
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-        onClick={() => toggleActive(item.id)}
-        {...handleProps}
-      >
-        {item.name}
-      </div>
-    );
-  };
-
   return (
-    <div ref={containerRef} style={{ touchAction: "pan-y" }}>
-      <DraggableList itemKey="id" template={ItemTemplate} list={items} onMoveEnd={handleMoveEnd} container={() => containerRef.current} />
+    <div className="container">
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="shiftList">
+          {(provided) => (
+            <ul ref={provided.innerRef} {...provided.droppableProps} className="list-group">
+              {items.map((item, index) => (
+                <Draggable key={item.id} draggableId={item.id} index={index} isDragDisabled={!item.active}>
+                  {(provided, snapshot) => (
+                    <li
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      onClick={() => toggleActive(item.id)}
+                      className={`list-group-item d-flex justify-content-between align-items-center shadow-sm ${
+                        item.active ? "bg-white text-dark" : "bg-light text-secondary"
+                      }`}
+                      style={{
+                        cursor: item.active ? "grab" : "pointer",
+                        marginBottom: "8px",
+                        border: "1px solid #ddd",
+                        borderRadius: "6px",
+                        transition: "background 0.3s ease",
+                        ...provided.draggableProps.style,
+                      }}
+                    >
+                      {item.name}
+                      <span className={`badge ${item.active ? "bg-success" : "bg-danger"}`}>{item.active ? "Aktif" : "Pasif"}</span>
+                    </li>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </ul>
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   );
 }
