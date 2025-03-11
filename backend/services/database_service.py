@@ -17,7 +17,7 @@ HOSPITAL_DB_CONFIGS = {
 
 
 def authenticate_user(username, password):
-    auth_conn = psycopg2.connect(os.getenv("AUTH_DB_URL"), sslmode="disable")
+    auth_conn = psycopg2.connect(os.getenv("AUTH_DB_URL"), sslmode="require")
     auth_cur = auth_conn.cursor(cursor_factory=RealDictCursor)
 
     auth_cur.execute("SELECT id, password_hash, hospital_db_name FROM users WHERE username = %s", (username,))
@@ -35,7 +35,7 @@ def authenticate_user(username, password):
 def connect_to_hospital_db():
     """ Kullanıcının hastane veritabanına bağlan """
     if g.hospital_db_name in HOSPITAL_DB_CONFIGS:
-        return psycopg2.connect(HOSPITAL_DB_CONFIGS[g.hospital_db_name], sslmode="disable")
+        return psycopg2.connect(HOSPITAL_DB_CONFIGS[g.hospital_db_name], sslmode="require")
     else:
         raise Exception("Hastane veritabanı tanımlı değil veya geçersiz!")
 
