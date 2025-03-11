@@ -16,8 +16,6 @@ def check_duplicate_shifts(schedule, schedule_data_id, log):
                         log_text = (
                             f"[!] Dr. {doctor_code}: Aynı nöbette {count} kere - {day_index + 1}. gün, {shift_index + 1}. shift."
                         )
-                        with open("generation_log.txt", "a") as log_file:
-                            log_file.write(log_text + "\n")
 
                         add_log_messages(schedule_data_id, [log_text])
 
@@ -40,9 +38,6 @@ def check_consecutive_shifts(schedule,schedule_data_id, log):
                             f"[!] Dr. {doctor_code}: Ardışık nöbet - {day_index + 1}. gün "
                         )
 
-                        with open("generation_log.txt", "a") as log_file:
-                            log_file.write(log_text + "\n")
-
                         add_log_messages(schedule_data_id, [log_text])
 
 
@@ -55,8 +50,7 @@ def check_consecutive_shifts(schedule,schedule_data_id, log):
                             log_text = (
                                 f"[!] Dr. {doctor_code}: Ardışık nöbet - {day_index + 1}. günün gecesi ve ertesi sabah "
                             )
-                            with open("generation_log.txt", "a") as log_file:
-                                log_file.write(log_text + "\n")
+                            
                             add_log_messages(schedule_data_id, [log_text])
 
     return penalty
@@ -77,8 +71,7 @@ def check_three_consecutive_night_shifts(schedule,schedule_data_id, log):
                     log_text = (
                         f"[!] Dr. {doctor_code}: 3 gece üst üste nöbet - {day_index + 1}. günden itibaren"
                     )
-                    with open("generation_log.txt", "a") as log_file:
-                        log_file.write(log_text + "\n")
+                    
                     add_log_messages(schedule_data_id, [log_text])
 
     return penalty

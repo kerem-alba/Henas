@@ -131,14 +131,7 @@ const ScheduleData = () => {
                   </select>
 
                   <label className="form-label mt-2">Yıl Seçin</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    placeholder="2024"
-                    min="2024"
-                  />
+                  <input type="number" className="form-control" value={year} onChange={(e) => setYear(e.target.value)} placeholder="Yıl" min="2024" />
                 </div>
               )}
 

@@ -9,15 +9,22 @@ const LogMessagesTable = ({ schedule_id }) => {
   useEffect(() => {
     const fetchLogs = async () => {
       setLoading(true);
-      const schedule = await getScheduleById(schedule_id);
-      const logs = schedule.log_messages;
-      if (logs.length === 0) {
-        setError("Bu schedule için log bulunamadı.");
-      } else {
-        setLogMessages(logs);
-        setError(null);
+      try {
+        const schedule = await getScheduleById(schedule_id);
+        const logs = schedule?.log_messages || []; // Eğer log_messages null/undefined ise boş dizi ata
+
+        if (logs.length === 0) {
+          setError("Bu schedule için log bulunamadı.");
+        } else {
+          setLogMessages(logs);
+          setError(null);
+        }
+      } catch (err) {
+        setError("Logları alırken hata oluştu.");
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     if (schedule_id) {

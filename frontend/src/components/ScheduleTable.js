@@ -96,10 +96,10 @@ const ScheduleTable = ({ doctors, detailedSeniorities, scheduleData, firstDay, d
       if (scheduleData && scheduleData.id) {
         await updateScheduleData(scheduleData.id, scheduleName, newScheduleData);
         alert("Nöbet listesi başarıyla güncellendi!");
-        navigate("/create-schedule");
       } else {
         await addScheduleData(scheduleName, newScheduleData, firstDay, daysInMonth);
         alert("Nöbet listesi başarıyla kaydedildi!");
+        navigate("/create-schedule");
       }
 
       setScheduleName("");
