@@ -4,9 +4,9 @@ import { getSettings, updateSettings } from "../services/apiService";
 import "rc-slider/assets/index.css";
 
 const generationMap = {
-  1: 500,
-  2: 2000,
-  3: 10000,
+  1: 2000,
+  2: 8000,
+  3: 15000,
   4: 40000,
   5: 80000,
 };
