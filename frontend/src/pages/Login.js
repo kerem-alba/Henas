@@ -6,11 +6,13 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
       const data = await login(username, password);
@@ -19,6 +21,8 @@ const Login = () => {
       navigate("/home");
     } catch (error) {
       setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,18 +36,45 @@ const Login = () => {
               <label htmlFor="username" className="form-label">
                 Kullanıcı Adı
               </label>
-              <input type="text" id="username" className="form-control" value={username} onChange={(e) => setUsername(e.target.value)} required />
+              <input
+                type="text"
+                id="username"
+                className="form-control"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                disabled={loading}
+              />
             </div>
             <div className="mb-3">
               <label htmlFor="password" className="form-label">
                 Şifre
               </label>
-              <input type="password" id="password" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input
+                type="password"
+                id="password"
+                className="form-control"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
             </div>
             {error && <div className="alert alert-danger">{error}</div>}
-            <button type="submit" className="btn btn-primary w-100">
-              Giriş Yap
-            </button>
+
+            {loading ? (
+              <div className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Yükleniyor...</span>
+                </div>
+                <p className="mt-2 fw-bold">Bağlantı kuruluyor, lütfen bekleyin...</p>
+                <p className="text-muted small">Sunucu uyku modunda olduğu için ilk bağlantı biraz uzun sürebilir. Bu sadece ilk girişte yaşanır.</p>
+              </div>
+            ) : (
+              <button type="submit" className="btn btn-primary w-100">
+                Giriş Yap
+              </button>
+            )}
           </form>
         </div>
       </div>
