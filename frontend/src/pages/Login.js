@@ -32,6 +32,14 @@ const Login = () => {
         <div className="card p-4 shadow-lg rounded-4" style={{ maxWidth: "400px", width: "100%" }}>
           <h2 className="text-center mb-4">Giriş Yap</h2>
           <form onSubmit={handleSubmit}>
+            <div className="alert alert-info text-center">
+              <strong>Demo Login</strong>
+              <br />
+              Username: <code>test</code>
+              <br />
+              Password: <code>test1234</code>
+            </div>
+
             <div className="mb-3">
               <label htmlFor="username" className="form-label">
                 Kullanıcı Adı
